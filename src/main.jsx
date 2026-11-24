@@ -86,7 +86,7 @@ function App() {
 
   return (
     <div className="site-shell">
-      <TeraReveal names="Venkata Sujitha Reddy & Srikar Reddy" />
+      <TeraReveal bride="Venkata Sujitha Reddy" groom="Srikar Reddy" />
       <ScrollThread />
       <PetalCanvas />
       <PetalTrail />

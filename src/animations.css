@@ -24,7 +24,10 @@ body.tera-locked { overflow: hidden; }
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 40%, #fdf2f1, #f2d9dd 70%);
+  /* Transparent on purpose: the two panels overlap to 104% so nothing shows
+     through while closed, and as they part the real invitation is revealed
+     behind them rather than a flat backdrop. */
+  background: transparent;
 }
 .tera.tera-open { pointer-events: none; }
 .tera.tera-gone { display: none; }
@@ -42,14 +45,16 @@ body.tera-locked { overflow: hidden; }
   will-change: transform;
 }
 .tera-panel::before {
-  /* gold zari border */
+  /* Gold zari border — on the OUTER edge of each panel. It used to sit on the
+     inner edge, where the two met in a thick bright band right behind the
+     monogram and swallowed the letterforms. */
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 26px;
+  width: 18px;
   background: linear-gradient(180deg, #e9c87d, #c79a4e 40%, #f2dca3 60%, #b8883f);
-  box-shadow: 0 0 22px rgba(233, 200, 125, .55);
+  box-shadow: 0 0 22px rgba(233, 200, 125, .5);
 }
 .tera-panel::after {
   /* woven paisley/buta motif field */
@@ -63,46 +68,175 @@ body.tera-locked { overflow: hidden; }
     radial-gradient(circle at 42% 78%, #f4d89b 0 2px, transparent 3px);
   background-size: 92px 108px;
 }
-.tera-left { left: 0; border-right: 1px solid rgba(0, 0, 0, .2); }
-.tera-left::before { right: 0; }
+.tera-left { left: 0; }
+.tera-left::before { left: 0; }
 .tera-right { right: 0; }
-.tera-right::before { left: 0; }
+.tera-right::before { right: 0; }
+/* Where the panels meet: a dark crease, not a bright band. */
+.tera-left { box-shadow: inset 0 0 120px rgba(50, 10, 24, .45), inset -22px 0 38px rgba(38, 6, 18, .6); }
+.tera-right { box-shadow: inset 0 0 120px rgba(50, 10, 24, .45), inset 22px 0 38px rgba(38, 6, 18, .6); }
 .tera-open .tera-left { transform: translateX(-102%); }
 .tera-open .tera-right { transform: translateX(102%); }
 
+/* ---- the medallion: an opaque arch plate that carries all the text -----
+   Nothing behind the curtain can reduce the contrast of the lettering,
+   because the letters never sit on the silk — they sit on this plate. */
 .tera-card {
   position: relative;
   z-index: 3;
   text-align: center;
-  color: #f7e7cf;
-  padding: 0 26px;
-  transition: opacity .5s ease, transform .6s ease;
+  color: #fbf0de;
+  width: min(92vw, 470px);
+  padding: clamp(34px, 6vw, 52px) clamp(22px, 5vw, 46px) clamp(30px, 5vw, 44px);
+  border-radius: 50% 50% 16px 16px / 26% 26% 4% 4%;
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(126, 40, 64, .97), rgba(58, 13, 29, .98) 72%),
+    linear-gradient(180deg, #4d1024, #350a1b);
+  border: 1px solid rgba(233, 200, 125, .6);
+  box-shadow:
+    0 36px 90px rgba(26, 4, 13, .62),
+    inset 0 0 70px rgba(18, 3, 10, .55);
+  animation: medallion-in 1.15s cubic-bezier(.2, .9, .2, 1) both;
+  transition: opacity .55s ease, transform .75s cubic-bezier(.3, .9, .2, 1);
 }
-.tera-open .tera-card { opacity: 0; transform: scale(.94); }
+/* inner gold hairline, echoing a temple arch */
+.tera-card::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  border: 1px solid rgba(233, 200, 125, .3);
+  border-radius: 50% 50% 11px 11px / 26% 26% 3% 3%;
+}
+.tera-open .tera-card { opacity: 0; transform: translateY(-26px) scale(1.07); }
 
-.tera-kalash { width: 74px; margin: 0 auto 14px; color: var(--marigold-2); animation: kalash-breathe 3.6s ease-in-out infinite; }
-.tera-om { font: 500 20px 'Noto Serif Telugu', serif; letter-spacing: 3px; color: #f1d9a7; }
-.tera-monogram { font: 500 clamp(62px, 13vw, 108px)/1 'Cormorant Garamond', serif; margin: 10px 0 4px; }
-.tera-monogram i { font-family: 'Great Vibes', cursive; color: #f0bd8e; }
-.tera-names { font: italic clamp(19px, 3.4vw, 27px) 'Cormorant Garamond', serif; color: #f6e3cb; }
-.tera-date { font-size: 9.5px; letter-spacing: 3.4px; margin-top: 12px; color: #f2d7b4; }
+@keyframes medallion-in {
+  from { opacity: 0; transform: translateY(26px) scale(.9); }
+}
+
+/* The gold mandala draws itself on the silk BEHIND the medallion. It is a
+   sibling of the card, not a child: .tera-card is a stacking context, so a
+   negative-z-index child of it would paint behind its own background. */
+.tera-mandala {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(94vw, 720px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  color: rgba(244, 216, 150, .52);
+  filter: drop-shadow(0 0 12px rgba(233, 200, 125, .3));
+  pointer-events: none;
+  z-index: 2;
+}
+.tera-mandala [data-draw] {
+  stroke-dasharray: var(--len, 1400);
+  stroke-dashoffset: var(--len, 1400);
+  animation: mandala-draw 2.4s cubic-bezier(.6, .02, .3, 1) .35s forwards;
+}
+.tera-mandala { animation: mandala-turn 70s linear infinite; }
+@keyframes mandala-draw { to { stroke-dashoffset: 0; } }
+@keyframes mandala-turn {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+/* on open the mandala blooms outward like a ring of light */
+.tera-open .tera-mandala {
+  animation: mandala-bloom .95s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+@keyframes mandala-bloom {
+  to { transform: translate(-50%, -50%) scale(2.1); opacity: 0; }
+}
+
+/* stagger the lines of the card in */
+.tera-card > * { animation: tera-line 0.85s cubic-bezier(.2, .9, .2, 1) both; }
+.tera-card > *:nth-child(2) { animation-delay: .34s; }
+.tera-card > *:nth-child(3) { animation-delay: .44s; }
+.tera-card > *:nth-child(4) { animation-delay: .54s; }
+.tera-card > *:nth-child(5) { animation-delay: .64s; }
+.tera-card > *:nth-child(6) { animation-delay: .74s; }
+.tera-card > *:nth-child(7) { animation-delay: .84s; }
+@keyframes tera-line {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+.tera-kalash {
+  position: relative;
+  width: 62px;
+  margin: 0 auto 12px;
+  color: var(--marigold-2);
+  filter: drop-shadow(0 0 14px rgba(247, 193, 62, .45));
+}
+/* both: the staggered entrance, then the idle breathe */
+.tera-kalash {
+  animation:
+    tera-line .85s cubic-bezier(.2, .9, .2, 1) both,
+    kalash-breathe 3.6s ease-in-out .95s infinite;
+}
+.tera-om {
+  font: 500 clamp(15px, 3.6vw, 19px) 'Noto Serif Telugu', serif;
+  letter-spacing: 2.5px;
+  color: #f6dfae;
+}
+.tera-monogram {
+  font: 500 clamp(58px, 12vw, 96px)/1 'Cormorant Garamond', serif;
+  margin: 12px 0 6px;
+  color: #fff6e6;
+  text-shadow: 0 2px 20px rgba(20, 3, 10, .7);
+}
+.tera-monogram i { font-family: 'Great Vibes', cursive; color: #f3c58f; }
+/* one name per line, so a long name never breaks mid-phrase */
+.tera-names {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+  font: italic clamp(17px, 3.1vw, 24px)/1.3 'Cormorant Garamond', serif;
+  color: #fbeace;
+  text-shadow: 0 1px 12px rgba(20, 3, 10, .6);
+}
+.tera-names em {
+  font: 26px 'Great Vibes', cursive;
+  font-style: normal;
+  color: #f3c58f;
+  line-height: 1;
+  margin: 1px 0;
+}
+.tera-rule {
+  display: block;
+  width: 86px;
+  height: 1px;
+  margin: 16px auto 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(233, 200, 125, .85), transparent);
+}
+.tera-date { font-size: 9.5px; letter-spacing: 3.4px; margin: 13px 0 0; color: #f0d2a6; }
 
 .tera-open-btn {
   margin-top: 26px;
-  border: 1px solid rgba(240, 212, 160, .7);
-  background: rgba(255, 255, 255, .07);
-  color: #f6e5cc;
+  border: 1px solid rgba(240, 212, 160, .8);
+  background: rgba(255, 240, 210, .1);
+  color: #fdf1dc;
   padding: 14px 24px;
   font-size: 9px;
   letter-spacing: 2.6px;
   display: inline-flex;
   align-items: center;
   gap: 11px;
-  backdrop-filter: blur(2px);
   animation: tap-pulse 2.4s ease-in-out infinite;
-  transition: background .25s, transform .25s;
+  transition: background .25s, transform .25s, border-color .25s;
 }
-.tera-open-btn:hover { background: rgba(255, 255, 255, .16); transform: translateY(-2px); }
+.tera-open-btn:hover {
+  background: rgba(255, 240, 210, .22);
+  border-color: #f6dfae;
+  transform: translateY(-2px);
+}
+/* the button is autofocused — keep the ring gold rather than browser blue */
+.tera-open-btn:focus { outline: none; }
+.tera-open-btn:focus-visible {
+  outline: 2px solid #f6dfae;
+  outline-offset: 3px;
+}
 
 @keyframes tap-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(242, 220, 163, .4); }
@@ -868,6 +1002,7 @@ body.tera-locked { overflow: hidden; }
   .tera.tera-open { opacity: 0; transition: opacity .3s linear; }
   .rv, .rv-stagger > *, .lift-words span i { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
   .kolam path, .kolam circle, .kolam line { stroke-dashoffset: 0 !important; animation: none !important; }
+  .tera-card, .tera-card > *, .tera-mandala, .tera-mandala [data-draw],
   .diya-flame, .diya-halo, .glow-orb, .shimmer, .shimmer-light, .art-flower, .hero-flower,
   .map-flower, .rsvp-flower, .count-bg-mark svg, .sun-disc, .couple-art, .bride, .groom, .veil,
   .toranam .leaf, .hang-string, .mango-leaf, .lamp, .map-sonar, .count-section h2 span,
@@ -877,6 +1012,8 @@ body.tera-locked { overflow: hidden; }
   }
   .shimmer, .shimmer-light { -webkit-text-fill-color: currentColor; color: #6c4650; background: none; }
   .count-section .shimmer-light { color: #f6e4e4; }
+  .tera-mandala [data-draw] { stroke-dashoffset: 0 !important; }
+  .tera-card, .tera-card > * { opacity: 1 !important; transform: none !important; }
   .cinema-img, .hero-film-poster, .cinema-grain, .moment { animation: none !important; }
   .cinema-img { transform: none !important; }
   .moment { transition: opacity .4s linear; }

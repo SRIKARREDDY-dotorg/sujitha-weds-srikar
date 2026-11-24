@@ -293,7 +293,10 @@ export function PetalCanvas({ density = 1 }) {
 /* ==========================================================================
    Tera — the ceremonial curtain held between bride and groom
    ========================================================================== */
-export function TeraReveal({ onOpen, names = 'Sujitha & Srikar', date = '13 · 12 · 2026' }) {
+export function TeraReveal({
+  onOpen, bride = 'Venkata Sujitha Reddy', groom = 'Srikar Reddy',
+  date = '13 · 12 · 2026', place = 'MYDUKUR',
+}) {
   const [state, setState] = useState('closed') // closed | open | gone
   const reduced = useReducedMotion()
 
@@ -322,17 +325,71 @@ export function TeraReveal({ onOpen, names = 'Sujitha & Srikar', date = '13 · 1
     <div className={`tera${state === 'open' ? ' tera-open' : ''}`} role="dialog" aria-label="Open the invitation">
       <div className="tera-panel tera-left" aria-hidden="true" />
       <div className="tera-panel tera-right" aria-hidden="true" />
+      <Mandala className="tera-mandala" />
       <div className="tera-card">
         <Kalash className="tera-kalash" />
         <div className="tera-om">శ్రీ రస్తు · శుభమస్తు</div>
         <div className="tera-monogram">S <i>&</i> S</div>
-        <div className="tera-names">{names}</div>
-        <div className="tera-date">{date} &nbsp;·&nbsp; MYDUKUR</div>
+        <div className="tera-names">
+          <span>{bride}</span><em>&</em><span>{groom}</span>
+        </div>
+        <hr className="tera-rule" />
+        <p className="tera-date">{date} &nbsp;·&nbsp; {place}</p>
         <button className="tera-open-btn" onClick={open} autoFocus>
           తెర తీయండి · OPEN THE INVITATION <ArrowRight size={14} />
         </button>
       </div>
     </div>
+  )
+}
+
+/* ---------- Mandala ring — draws itself, then turns slowly ------------ */
+export function Mandala({ className = '' }) {
+  const ref = useRef(null)
+  useLayoutEffect(() => {
+    ref.current?.querySelectorAll('[data-draw]').forEach(el => {
+      const len = typeof el.getTotalLength === 'function' ? el.getTotalLength() : 1400
+      el.style.setProperty('--len', len)
+    })
+  }, [])
+
+  // All detail lives in the outer annulus (r 136–216). The medallion plate
+  // covers the centre, so anything drawn inside that radius is never seen.
+  const C = 220
+  const petals = 18
+  const dots = 36
+  return (
+    <svg
+      ref={ref} className={className} viewBox="0 0 440 440"
+      fill="none" stroke="currentColor" aria-hidden="true"
+    >
+      <circle data-draw cx={C} cy={C} r="216" strokeWidth="1" />
+      <circle data-draw cx={C} cy={C} r="200" strokeWidth=".7" opacity=".75" />
+      <circle data-draw cx={C} cy={C} r="138" strokeWidth=".7" opacity=".75" />
+      {/* lotus petal ring, r 142 → 198 */}
+      {Array.from({ length: petals }).map((_, i) => (
+        <path
+          key={`p${i}`} data-draw
+          d={`M${C} 22 C${C + 17} 44 ${C + 17} 60 ${C} 80 C${C - 17} 60 ${C - 17} 44 ${C} 22Z`}
+          strokeWidth=".9"
+          transform={`rotate(${(i / petals) * 360} ${C} ${C})`}
+          style={{ animationDelay: `${0.4 + i * 0.05}s` }}
+        />
+      ))}
+      {/* bead ring between the petals and the inner circle */}
+      {Array.from({ length: dots }).map((_, i) => {
+        const a = (i / dots) * Math.PI * 2 + Math.PI / dots
+        return (
+          <circle
+            key={`d${i}`}
+            cx={C + Math.cos(a) * 119} cy={C + Math.sin(a) * 119}
+            r={i % 3 === 0 ? 2.6 : 1.5}
+            fill="currentColor" stroke="none" opacity="0"
+            style={{ animation: `kolam-dot .45s ease ${1.1 + i * 0.018}s forwards` }}
+          />
+        )
+      })}
+    </svg>
   )
 }
 
