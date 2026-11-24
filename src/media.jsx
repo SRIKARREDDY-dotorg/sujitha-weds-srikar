@@ -16,17 +16,28 @@ export const MEDIA_BASE = '/media'
 /** The asset manifest — filenames here match PROMPTS.md one-to-one. */
 export const SLOTS = {
   heroFilm:      { file: 'hero-muhurtham',   kind: 'video', ratio: '16/9', poster: 'hero-muhurtham-poster' },
-  heroStill:     { file: 'couple-portrait',  kind: 'image', ratio: '4/5' },
+  couplePortrait:{ file: 'couple-portrait',  kind: 'image', ratio: '3/4' },
   talambralu:    { file: 'talambralu',       kind: 'image', ratio: '3/2' },
-  mangalsutra:   { file: 'mangalsutra',      kind: 'image', ratio: '4/5' },
+  mangalsutra:   { file: 'mangalsutra',      kind: 'image', ratio: '4/3' },
   jeelakarra:    { file: 'jeelakarra-bellam', kind: 'image', ratio: '3/2' },
   mehendi:       { file: 'mehendi-hands',    kind: 'image', ratio: '1/1' },
   mandapam:      { file: 'mandapam-wide',    kind: 'image', ratio: '16/9' },
   toranamClose:  { file: 'toranam-closeup',  kind: 'image', ratio: '3/2' },
-  receptionNight:{ file: 'reception-night',  kind: 'image', ratio: '3/2' },
+  receptionNight:{ file: 'reception-night',  kind: 'image', ratio: '4/3' },
   kalashLoop:    { file: 'diya-loop',        kind: 'video', ratio: '1/1' },
   pellikuthuru:  { file: 'pellikuthuru',     kind: 'image', ratio: '4/5' },
+  // section-wide background bands (scenes 6 and 7)
+  countdownBand: { file: 'countdown-band',   kind: 'image', ratio: '16/9' },
+  rsvpBand:      { file: 'rsvp-band',        kind: 'image', ratio: '16/9' },
+  // square tradition icons (scene 8)
+  tradition1:    { file: 'tradition-1',      kind: 'image', ratio: '1/1' },
+  tradition2:    { file: 'tradition-2',      kind: 'image', ratio: '1/1' },
+  tradition3:    { file: 'tradition-3',      kind: 'image', ratio: '1/1' },
+  tradition4:    { file: 'tradition-4',      kind: 'image', ratio: '1/1' },
 }
+
+/** Background music. Optional, like everything else here. */
+export const AUDIO = { file: 'nurella-thodu', exts: ['mp3', 'm4a', 'ogg'] }
 
 /* Extension candidates, best format first. */
 const IMG_EXT = ['avif', 'webp', 'jpg', 'png']
@@ -35,10 +46,14 @@ const VID_EXT = ['webm', 'mp4']
 /** Probe a list of candidate URLs, resolve the first that loads. */
 function useFirstAvailable(file, kind, enabled = true) {
   const [src, setSrc] = useState(null)
-  const [state, setState] = useState('probing') // probing | found | missing
+  // idle = not probed yet (off-screen). Distinct from `missing`, so a frame
+  // that simply has not been looked at does not get the "empty slot" styling.
+  const [state, setState] = useState('idle') // idle | probing | found | missing
 
   useEffect(() => {
-    if (!enabled || !file) { setState('missing'); return }
+    if (!file) { setState('missing'); return }
+    if (!enabled) { setState('idle'); return }
+    setState('probing')
     let cancelled = false
     const exts = kind === 'video' ? VID_EXT : IMG_EXT
     const urls = exts.map(e => `${MEDIA_BASE}/${file}.${e}`)
@@ -75,9 +90,37 @@ function useFirstAvailable(file, kind, enabled = true) {
 /* ==========================================================================
    CinemaImage — lazy, Ken-Burns / drift animated photo with graceful fallback
    ========================================================================== */
+/**
+ * Which of `names` actually have files on disk. Lets a section hide itself
+ * (rather than render dashed placeholders) until its art arrives.
+ */
+export function useAvailableSlots(names) {
+  const [available, setAvailable] = useState(null) // null = still probing
+  const key = names.join(',')
+  useEffect(() => {
+    let cancelled = false
+    const probe = file => new Promise(res => {
+      const tryNext = k => {
+        if (k >= IMG_EXT.length) return res(false)
+        const img = new Image()
+        img.onload = () => res(true)
+        img.onerror = () => tryNext(k + 1)
+        img.src = `${MEDIA_BASE}/${file}.${IMG_EXT[k]}`
+      }
+      tryNext(0)
+    })
+    Promise.all(names.map(n => probe(SLOTS[n]?.file))).then(hits => {
+      if (!cancelled) setAvailable(names.filter((n, i) => hits[i]))
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+  return available
+}
+
 export function CinemaImage({
   slot, alt = '', effect = 'kenburns', className = '', children,
-  overlay = true, caption, telugu, eager = false,
+  overlay = true, caption, telugu, eager = false, grade = 'film',
 }) {
   const cfg = SLOTS[slot] || {}
   const holder = useRef(null)
@@ -101,7 +144,7 @@ export function CinemaImage({
   return (
     <figure
       ref={holder}
-      className={`cinema cinema-${state} ${className}`}
+      className={`cinema cinema-${state} grade-${grade} ${className}`}
       style={{ '--ratio': cfg.ratio || '3/2' }}
     >
       <div className="cinema-frame">
@@ -116,9 +159,12 @@ export function CinemaImage({
           />
         )}
         {state !== 'found' && <div className="cinema-fallback">{children}</div>}
-        {overlay && <span className="cinema-grade" aria-hidden="true" />}
-        {overlay && <span className="cinema-grain" aria-hidden="true" />}
-        <span className="cinema-vignette" aria-hidden="true" />
+        {/* A multiply grade and film grain make a PHOTO sit in the palette.
+            On watercolour art they just muddy it, so grade="soft" keeps only
+            a whisper of vignette and grade="none" leaves the art untouched. */}
+        {overlay && grade === 'film' && <span className="cinema-grade" aria-hidden="true" />}
+        {overlay && grade === 'film' && <span className="cinema-grain" aria-hidden="true" />}
+        {grade !== 'none' && <span className="cinema-vignette" aria-hidden="true" />}
       </div>
       {(caption || telugu) && (
         <figcaption className="cinema-caption">
@@ -143,8 +189,13 @@ export function HeroFilm({ children, className = '', onMedia }) {
   const [playing, setPlaying] = useState(false)
 
   useEffect(() => {
-    const any = (state === 'found' && !reduced) || poster.state === 'found'
-    if (state !== 'probing' && poster.state !== 'probing') onMedia?.(any)
+    // Report only once both probes have settled, or the hero would flip from
+    // "no media" to "media" on load. Under reduced motion the video probe is
+    // never started (state stays idle), so treat that as settled.
+    const done = s => s === 'found' || s === 'missing'
+    const videoSettled = reduced || done(state)
+    if (!videoSettled || !done(poster.state)) return
+    onMedia?.((state === 'found' && !reduced) || poster.state === 'found')
   }, [state, poster.state, reduced, onMedia])
 
   useEffect(() => {
@@ -182,96 +233,141 @@ export function HeroFilm({ children, className = '', onMedia }) {
 }
 
 /* ==========================================================================
-   MomentsGallery — crossfading ritual slideshow with Telugu captions.
-   Renders only the slots whose files actually exist; hides itself if none do.
+   TraditionIcons — a row of round 1:1 ritual vignettes with Telugu labels.
+   Shows only the ones whose art exists, and nothing at all until the first
+   file lands, so the section never renders as empty placeholders.
    ========================================================================== */
-const DEFAULT_MOMENTS = [
-  { slot: 'pellikuthuru',   telugu: 'పెళ్ళికూతురు',       caption: 'Pelli Kuthuru — the bride is blessed' },
-  { slot: 'mehendi',        telugu: 'గోరింటాకు',           caption: 'Gorintaku — mehendi night' },
-  { slot: 'jeelakarra',     telugu: 'జీలకర్ర బెల్లం',      caption: 'Jeelakarra Bellam — the first vow' },
-  { slot: 'mangalsutra',    telugu: 'మాంగళ్య ధారణ',        caption: 'Mangalya Dharana — three sacred knots' },
-  { slot: 'talambralu',     telugu: 'తలంబ్రాలు',           caption: 'Talambralu — a shower of pearls and rice' },
-  { slot: 'mandapam',       telugu: 'కళ్యాణ మండపం',        caption: 'The Kalyana Mandapam at dawn' },
-  { slot: 'receptionNight', telugu: 'ఆశీర్వచనం',           caption: 'Reception — an evening of blessings' },
+export const TRADITIONS = [
+  { slot: 'tradition1', telugu: 'జీలకర్ర బెల్లం', caption: 'Cumin & jaggery', alt: 'Jeelakarra Bellam ritual' },
+  { slot: 'tradition2', telugu: 'తలంబ్రాలు', caption: 'Rice & pearls', alt: 'Talambralu ritual' },
+  { slot: 'tradition3', telugu: 'మాంగళ్య ధారణ', caption: 'The sacred knots', alt: 'Mangalya Dharana ritual' },
+  { slot: 'tradition4', telugu: 'గోరింటాకు', caption: 'Mehendi', alt: 'Gorintaku, the mehendi ritual' },
 ]
 
-export function MomentsGallery({ moments = DEFAULT_MOMENTS, interval = 4200 }) {
-  const [available, setAvailable] = useState([])
-  const [i, setI] = useState(0)
-  const [ready, setReady] = useState(false)
-  const reduced = useReducedMotion()
-
-  // probe every candidate once, keep the ones that resolve
-  useEffect(() => {
-    let cancelled = false
-    const probe = file => new Promise(res => {
-      const tryNext = k => {
-        if (k >= IMG_EXT.length) return res(null)
-        const img = new Image()
-        img.onload = () => res(`${MEDIA_BASE}/${file}.${IMG_EXT[k]}`)
-        img.onerror = () => tryNext(k + 1)
-        img.src = `${MEDIA_BASE}/${file}.${IMG_EXT[k]}`
-      }
-      tryNext(0)
-    })
-    Promise.all(moments.map(m => probe(SLOTS[m.slot]?.file))).then(urls => {
-      if (cancelled) return
-      setAvailable(moments.map((m, k) => ({ ...m, src: urls[k] })).filter(m => m.src))
-      setReady(true)
-    })
-    return () => { cancelled = true }
-  }, [moments])
-
-  useEffect(() => {
-    if (reduced || available.length < 2) return
-    const t = setInterval(() => setI(v => (v + 1) % available.length), interval)
-    return () => clearInterval(t)
-  }, [available.length, interval, reduced])
-
-  if (!ready || available.length === 0) return null
-
+export function TraditionIcons({ items = TRADITIONS }) {
+  const available = useAvailableSlots(items.map(i => i.slot))
+  if (!available || available.length === 0) return null
+  const shown = items.filter(i => available.includes(i.slot))
   return (
-    <div className="moments" role="group" aria-label="Wedding ritual gallery">
-      <div className="moments-stage">
-        {available.map((m, k) => (
-          <figure key={m.slot} className={`moment${k === i ? ' on' : ''}`} aria-hidden={k !== i}>
-            <img src={m.src} alt={m.caption} loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
-            <span className="moment-grade" />
-            <figcaption>
-              <span className="cc-telugu">{m.telugu}</span>
-              <span className="cc-en">{m.caption}</span>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-      {available.length > 1 && (
-        <div className="moments-dots">
-          {available.map((m, k) => (
-            <button
-              key={m.slot}
-              className={k === i ? 'on' : ''}
-              onClick={() => setI(k)}
-              aria-label={m.caption}
-              aria-current={k === i}
+    <div className="tradition-row">
+      {shown.map((t, i) => (
+        <figure className="tradition" key={t.slot} style={{ '--d': `${i * 110}ms` }}>
+          <div className="tradition-disc">
+            <CinemaImage
+              slot={t.slot} alt={t.alt} effect="kenburns-slow"
+              grade="soft" overlay={false} caption={null} telugu={null}
             />
-          ))}
-        </div>
-      )}
+          </div>
+          <figcaption>
+            <span className="cc-telugu">{t.telugu}</span>
+            <span className="cc-en">{t.caption}</span>
+          </figcaption>
+        </figure>
+      ))}
     </div>
   )
 }
 
 /* ==========================================================================
+   SceneBand — a full-width illustration behind a section's content
+   ========================================================================== */
+export function SceneBand({ slot, opacity = 0.3, position = 'center' }) {
+  const cfg = SLOTS[slot] || {}
+  const { src, state } = useFirstAvailable(cfg.file, 'image')
+  if (state !== 'found') return null
+  return (
+    <span className="scene-band" aria-hidden="true">
+      <img src={src} alt="" loading="lazy" decoding="async"
+        style={{ opacity, objectPosition: position }} />
+    </span>
+  )
+}
+
+/* ==========================================================================
+   useBackgroundMusic — the sound toggle, wired to a real track.
+   Browsers only allow playback from a user gesture, so every entry point
+   here is a click. If the browser still refuses, we fail back to "off"
+   rather than showing SOUND ON over silence.
+   ========================================================================== */
+export function useBackgroundMusic({ volume = 0.5, fadeMs = 1600 } = {}) {
+  const ref = useRef(null)
+  const fade = useRef(0)
+  const [on, setOn] = useState(false)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const tryNext = i => {
+      if (i >= AUDIO.exts.length) return
+      const url = `${MEDIA_BASE}/${AUDIO.file}.${AUDIO.exts[i]}`
+      fetch(url, { method: 'HEAD' })
+        .then(r => {
+          if (cancelled) return
+          const ct = r.headers.get('content-type') || ''
+          if (r.ok && !ct.includes('text/html')) {
+            const a = new Audio()
+            a.src = url
+            a.loop = true
+            a.preload = 'none'
+            a.volume = 0
+            ref.current = a
+            setReady(true)
+          } else tryNext(i + 1)
+        })
+        .catch(() => tryNext(i + 1))
+    }
+    tryNext(0)
+    return () => {
+      cancelled = true
+      clearInterval(fade.current)
+      ref.current?.pause()
+    }
+  }, [])
+
+  const rampTo = (target, done) => {
+    const a = ref.current
+    if (!a) return
+    clearInterval(fade.current)
+    const steps = Math.max(1, Math.round(fadeMs / 50))
+    const from = a.volume
+    let i = 0
+    fade.current = setInterval(() => {
+      i++
+      a.volume = Math.min(1, Math.max(0, from + (target - from) * (i / steps)))
+      if (i >= steps) { clearInterval(fade.current); done?.() }
+    }, 50)
+  }
+
+  const play = () => {
+    const a = ref.current
+    if (!a) return
+    a.volume = 0
+    a.play().then(() => { setOn(true); rampTo(volume) }).catch(() => setOn(false))
+  }
+  const pause = () => {
+    const a = ref.current
+    if (!a) return
+    rampTo(0, () => a.pause())
+    setOn(false)
+  }
+
+  return { on, ready, play, pause, toggle: () => (on ? pause() : play()) }
+}
+
+/* ==========================================================================
    ArchFrame — mandapam-arch masked media frame (for portraits)
    ========================================================================== */
-export function ArchFrame({ slot, alt, telugu, caption, children, parallax = 0.07 }) {
+export function ArchFrame({
+  slot, alt, telugu, caption, children, parallax = 0.07, grade = 'soft',
+}) {
   const ref = useParallax(parallax, 42)
   return (
     <div className="arch-frame" ref={ref}>
       <div className="arch-frame-inner">
-        <CinemaImage slot={slot} alt={alt} effect="kenburns-slow" telugu={telugu} caption={caption}>
-          {children}
-        </CinemaImage>
+        <CinemaImage
+          slot={slot} alt={alt} effect="kenburns-slow"
+          telugu={telugu} caption={caption} grade={grade}
+        >{children}</CinemaImage>
       </div>
       <span className="arch-frame-gold" aria-hidden="true" />
     </div>

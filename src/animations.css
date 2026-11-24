@@ -446,8 +446,10 @@ body.tera-locked { overflow: hidden; }
 }
 
 /* ---------- 8. Gold zari shimmer on names --------------------------- */
+/* The highlight stops at a rich gold, not near-white: these names sit on a
+   pale wash, and a white sweep made them vanish mid-animation. */
 .shimmer {
-  background: linear-gradient(100deg, #6c4650 0 38%, #d9ab63 46%, #fff0c9 50%, #d9ab63 54%, #6c4650 62% 100%);
+  background: linear-gradient(100deg, #6c4650 0 40%, #a9793a 47%, #c99a4e 50%, #a9793a 53%, #6c4650 60% 100%);
   background-size: 260% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -644,8 +646,35 @@ body.tera-locked { overflow: hidden; }
 @keyframes art-fade {
   from { opacity: 0; }
 }
-.hero.film-on .hero-art { opacity: .18 !important; animation: none !important; }
-.hero.film-on .hero-bottom span, .hero.film-on .hero-bottom div { opacity: .85; }
+/* With the watercolour couple in the background, the drawn CSS couple would
+   sit right on top of them. Drop it entirely rather than ghost it back. */
+.hero.film-on .hero-art { display: none; }
+/* the artwork already has its own painted toranam and hanging strings —
+   drawing mine on top gives the hero two garlands */
+.hero.film-on .toranam, .hero.film-on .hang-string { display: none; }
+.hero.film-on .floating-heart, .hero.film-on .glow-orb { display: none; }
+/* the footer rule sits over the artwork, so it needs lifting off it */
+.hero.film-on .hero-bottom span {
+  color: #74505c;
+  text-shadow: 0 1px 7px rgba(255, 251, 248, .95), 0 0 14px rgba(255, 251, 248, .8);
+}
+.hero.film-on .hero-bottom div { background: rgba(150, 110, 120, .5); }
+/* NB: do not set grid-template-columns here. styles.css collapses .hero to a
+   single column under 800px, and a `.hero.film-on` rule outside that media
+   query outranks it — which crushed the copy into half-width on phones. */
+.hero.film-on .hero-copy {
+  background: radial-gradient(ellipse at 20% 50%, rgba(255, 252, 250, .72), transparent 72%);
+}
+@media (max-width: 800px) {
+  /* single column, so the art is directly behind the text: give it a card */
+  .hero.film-on .hero-copy {
+    background: linear-gradient(180deg, rgba(255, 252, 250, .93), rgba(255, 252, 250, .88) 72%, rgba(255, 252, 250, .66));
+    backdrop-filter: blur(2px);
+    padding: 26px 22px 30px;
+    border-radius: 3px;
+    box-shadow: 0 14px 44px rgba(120, 80, 92, .14);
+  }
+}
 .bride { animation: sway-b 7s ease-in-out infinite 1.6s; transform-origin: bottom center; }
 .groom { animation: sway-g 7.6s ease-in-out infinite 1.6s; transform-origin: bottom center; }
 @keyframes sway-b {
@@ -840,17 +869,34 @@ body.tera-locked { overflow: hidden; }
   animation: kb-in 26s ease-in-out infinite alternate;
 }
 .hero-film-poster.hidden { opacity: 0; }
+/* Washes out the left side so the invitation text reads, and leaves the right
+   side almost clear so the art is actually visible. No dark end: the
+   watercolour is pale and a maroon veil over it just looks like dirt. */
 .hero-film-scrim {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(100deg, rgba(251, 243, 242, .95) 0%, rgba(249, 233, 236, .78) 34%, rgba(240, 217, 223, .28) 62%, rgba(120, 72, 84, .3) 100%),
-    linear-gradient(180deg, rgba(255, 250, 247, .5), transparent 30%, rgba(94, 50, 62, .34));
+    linear-gradient(100deg,
+      rgba(252, 246, 244, .96) 0%,
+      rgba(250, 238, 239, .88) 26%,
+      rgba(246, 228, 231, .5) 48%,
+      rgba(244, 224, 228, .14) 70%,
+      rgba(244, 224, 228, .04) 100%),
+    linear-gradient(180deg, rgba(255, 250, 247, .42), transparent 26% 74%, rgba(250, 238, 239, .5));
 }
 /* event-card illustration becomes a photo when the asset exists */
 .event-photo { position: absolute; inset: 0; }
 .event-photo .cinema-frame { aspect-ratio: auto; height: 100%; background: transparent; }
 .event-photo .cinema-caption { display: none; }
+/* over artwork the bare label is unreadable — give it a pill to sit on */
+.event-photo.cinema-found ~ span {
+  color: #fff4e4;
+  padding: 7px 17px;
+  background: rgba(58, 24, 34, .5);
+  border: 1px solid rgba(255, 240, 210, .32);
+  backdrop-filter: blur(3px);
+  text-shadow: 0 1px 8px rgba(30, 10, 16, .7);
+}
 .event-photo.cinema-missing .cinema-grade,
 .event-photo.cinema-missing .cinema-vignette,
 .map-photo.cinema-missing .cinema-grade,
@@ -865,17 +911,6 @@ body.tera-locked { overflow: hidden; }
 .map-photo.cinema-found ~ .map-label { text-shadow: 0 2px 12px rgba(40, 20, 26, .75); }
 .map-photo.cinema-found ~ .map-pin { background: rgba(255, 250, 247, .95); color: #a96579; }
 
-/* placeholder ornament shown inside an empty cinema frame */
-.cinema-ph {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 46%;
-  max-width: 130px;
-  transform: translate(-50%, -50%);
-  color: #c79ca0;
-  opacity: .55;
-}
 .cinema-missing .cinema-frame::after {
   content: "";
   position: absolute;
@@ -883,73 +918,73 @@ body.tera-locked { overflow: hidden; }
   border: 1px dashed rgba(190, 150, 152, .5);
   pointer-events: none;
 }
+/* the dashed "slot is empty" hint only belongs where a frame is on its own;
+   inside an event card or the map panel the CSS art already fills it */
 .event-photo.cinema-missing .cinema-frame::after,
-.map-photo.cinema-missing .cinema-frame::after { display: none; }
+.map-photo.cinema-missing .cinema-frame::after,
+.intro-ornament .cinema-missing .cinema-frame::after { display: none; }
 
-/* ---------- MomentsGallery ------------------------------------------- */
-.moments { max-width: 1020px; margin: 0 auto; }
-.moments-stage {
+/* ---------- grade variants -------------------------------------------
+   The watercolour art is already in the blush palette, so it needs none of
+   the correction a photo does — just a whisper of edge shading. */
+.grade-soft .cinema-vignette { box-shadow: inset 0 0 70px rgba(110, 70, 80, .16); }
+.grade-soft .cinema-frame { background: linear-gradient(145deg, #f7ebe6, #fbf4ee); }
+
+/* ---------- TraditionIcons (scene 8, 1:1) ----------------------------- */
+.tradition-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(16px, 3vw, 40px);
+  max-width: 920px;
+  margin: 46px auto 0;
+}
+.tradition { margin: 0; text-align: center; }
+.tradition-disc {
   position: relative;
-  aspect-ratio: 16/9;
+  border-radius: 50%;
   overflow: hidden;
-  background: #efdedc;
-  box-shadow: 0 26px 70px rgba(103, 61, 71, .18);
+  border: 1px solid rgba(201, 158, 86, .55);
+  box-shadow: 0 16px 38px rgba(103, 68, 74, .14), inset 0 0 0 5px rgba(255, 255, 255, .5);
+  transition: transform .55s cubic-bezier(.2, .8, .2, 1), box-shadow .55s ease;
 }
-.moment {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  transform: scale(1.05);
-  transition: opacity 1.4s ease, transform 5.6s ease-out;
-  pointer-events: none;
+.tradition-disc .cinema-frame { aspect-ratio: 1; background: #f6e9e4; }
+.tradition:hover .tradition-disc {
+  transform: translateY(-7px) scale(1.03);
+  box-shadow: 0 26px 52px rgba(103, 68, 74, .22), inset 0 0 0 5px rgba(255, 255, 255, .7);
 }
-.moment.on { opacity: 1; transform: scale(1); pointer-events: auto; }
-.moment img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.moment-grade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(90, 44, 56, .1) 0%, transparent 42%, rgba(66, 30, 40, .76) 100%);
-}
-.moment figcaption {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 26px clamp(20px, 5%, 44px);
+.tradition figcaption {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  text-align: left;
+  gap: 4px;
+  margin-top: 15px;
 }
-.moment figcaption .cc-telugu {
-  font-size: clamp(19px, 2.6vw, 27px);
-  color: #ffe8c9;
-  text-shadow: 0 2px 14px rgba(50, 20, 28, .6);
-  transform: translateY(14px);
-  opacity: 0;
-  transition: .9s cubic-bezier(.2, .8, .2, 1) .35s;
+.tradition .cc-telugu { font-size: clamp(14px, 1.6vw, 17px); }
+.tradition .cc-en { font-size: 8.5px; letter-spacing: 1.6px; }
+.tradition { animation: tradition-in .9s cubic-bezier(.2, .9, .2, 1) both var(--d, 0ms); }
+@keyframes tradition-in {
+  from { opacity: 0; transform: translateY(24px) scale(.94); }
 }
-.moment figcaption .cc-en {
-  color: #f6e3dd;
-  letter-spacing: 2.4px;
-  font-size: 9.5px;
-  transform: translateY(14px);
-  opacity: 0;
-  transition: .9s cubic-bezier(.2, .8, .2, 1) .5s;
-}
-.moment.on figcaption .cc-telugu, .moment.on figcaption .cc-en { transform: none; opacity: 1; }
+@media (max-width: 760px) { .tradition-row { grid-template-columns: repeat(2, 1fr); row-gap: 32px; } }
 
-.moments-dots { display: flex; justify-content: center; gap: 9px; margin-top: 18px; }
-.moments-dots button {
-  width: 24px;
-  height: 3px;
-  border: 0;
-  padding: 0;
-  background: rgba(150, 110, 118, .32);
-  transition: background .35s ease, width .35s ease;
+/* ---------- SceneBand — illustration behind a section's content ------- */
+/* z-index:-1 inside a stacking context paints above the section's own
+   background but below its in-flow content — so no rule has to touch the
+   children. (Forcing `position:relative` onto every child broke
+   .count-bg-mark, which must stay absolute.) */
+.scene-band {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
 }
-.moments-dots button.on { background: linear-gradient(90deg, var(--kumkum), var(--marigold)); width: 42px; }
+.count-section, .rsvp-section { isolation: isolate; }
+.scene-band img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: kb-in 34s ease-in-out infinite alternate;
+}
 
 /* ---------- ArchFrame ------------------------------------------------- */
 .arch-frame { position: relative; will-change: transform; }
@@ -977,24 +1012,55 @@ body.tera-locked { overflow: hidden; }
   filter: saturate(1.15);
 }
 
-/* ---------- Ritual film-strip section ------------------------------- */
+/* ---------- Rituals section ------------------------------------------ */
 .rituals { background: #fcf7f3; }
-.ritual-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-  max-width: 1020px;
-  margin: 42px auto 0;
-}
-/* one ratio across the strip so the captions sit on a single baseline,
-   whatever ratio the generated art happens to be */
-.ritual-grid .cinema-frame { aspect-ratio: 3/2; box-shadow: 0 16px 42px rgba(103, 68, 74, .1); }
 
 /* the CSS art inside an event illustration was centred by the parent flexbox;
    inside the fallback block it needs explicit centring */
 .event-illustration .event-arch { left: 50%; transform: translateX(-50%); }
-@media (max-width: 800px) { .ritual-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .ritual-grid { grid-template-columns: 1fr; gap: 26px; } }
+
+/* ---------- intro portrait (scene 4) ---------------------------------
+   .intro-ornament used to BE the decorated panel. It is now just a column
+   holding either the portrait or, failing that, the drawn muggu — so its
+   border and backdrop move onto the fallback. */
+.intro-ornament {
+  height: auto;
+  border: 0;
+  background: none;
+  display: block;
+}
+.intro-ornament .arch-frame-inner { background: linear-gradient(145deg, #fffaf7, #f8e9e9); }
+.intro-ornament .cinema-frame { aspect-ratio: 3/4; }
+/* styles.css has a broad `.intro-ornament span` rule (24px Telugu serif) that
+   also caught the English caption span — hence these explicit overrides */
+.intro-ornament .cinema-caption { align-items: center; text-align: center; padding: 16px 14px 18px; }
+.intro-ornament .cinema-caption .cc-telugu {
+  font: 500 20px 'Noto Serif Telugu', serif;
+  letter-spacing: 0;
+  color: #a9707e;
+}
+.intro-ornament .cinema-caption .cc-en {
+  font: 600 8.5px 'DM Sans', sans-serif;
+  letter-spacing: 2px;
+  color: #9c8286;
+}
+
+.ornament-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #b78c91;
+  background: linear-gradient(145deg, #fffaf7, #f8e9e9);
+}
+.ornament-fallback span { font: 24px 'Noto Serif Telugu', serif; margin-top: 12px; }
+.ornament-fallback small { font-size: 8px; letter-spacing: 2px; margin-top: 8px; }
+@media (max-width: 600px) {
+  .intro-ornament .cinema-frame { aspect-ratio: 4/5; }
+  .ornament-fallback span { font-size: 20px; }
+}
 
 /* ---------- 19. Reduced motion: strip all of it ---------------------- */
 @media (prefers-reduced-motion: reduce) {

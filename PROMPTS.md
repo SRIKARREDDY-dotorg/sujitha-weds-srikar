@@ -9,6 +9,18 @@ video `.webm` → `.mp4`. The loader tries them in that order and uses the first
 
 ---
 
+> **The live set is watercolour, not photoreal.** The four scenes in place are
+> soft storybook illustrations, and the site now grades them accordingly
+> (`grade="soft"` — no multiply layer, no film grain). Keep new scenes in that
+> same style or they will not sit together. A matching style suffix:
+>
+> > soft Indian watercolour storybook illustration, delicate ink linework,
+> > washed pastel palette of blush pink, ivory, marigold and sage, warm
+> > golden light, visible paper texture, gentle and romantic, no text
+>
+> The photoreal guidance below still applies if you ever switch the whole set
+> over — but do not mix the two.
+
 ## 1. Shared style suffix
 
 Append this to **every** still prompt so the whole set grades as one film and

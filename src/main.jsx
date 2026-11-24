@@ -7,9 +7,12 @@ import './styles.css'
 import './animations.css'
 import {
   Reveal, LiftWords, PetalCanvas, PetalTrail, ScrollThread, TeraReveal, Toranam, HangStrings,
-  Kolam, DiyaRow, GlowOrbs, Typewriter, Kalash, useParallax, burstFromEl, burstAt,
+  Kolam, DiyaRow, GlowOrbs, Typewriter, useParallax, burstFromEl,
 } from './animations.jsx'
-import { HeroFilm, CinemaImage, MomentsGallery, ArchFrame, DiyaLoop } from './media.jsx'
+import {
+  HeroFilm, CinemaImage, ArchFrame, DiyaLoop, SceneBand, TraditionIcons,
+  useAvailableSlots, useBackgroundMusic,
+} from './media.jsx'
 
 const weddingDate = new Date('2026-12-13T07:15:00+05:30')
 
@@ -68,9 +71,17 @@ function App() {
   const [rsvp, setRsvp] = useState('')
   const [guest, setGuest] = useState('')
   const [sent, setSent] = useState(false)
-  const [music, setMusic] = useState(false)
   const [filmOn, setFilmOn] = useState(false)
   const heroArt = useParallax(0.09, 56)
+  const music = useBackgroundMusic({ volume: 0.45 })
+
+  // The rituals section only exists once at least one tradition icon does,
+  // so the section numbers have to follow rather than be hardcoded.
+  const traditions = useAvailableSlots(['tradition1', 'tradition2', 'tradition3', 'tradition4'])
+  const hasTraditions = !!traditions && traditions.length > 0
+  const order = ['story', ...(hasTraditions ? ['rituals'] : []), 'events', 'details', 'rsvp']
+  const no = id => String(order.indexOf(id) + 1).padStart(2, '0')
+  const total = String(order.length).padStart(2, '0')
 
   const submit = e => {
     e.preventDefault()
@@ -86,7 +97,10 @@ function App() {
 
   return (
     <div className="site-shell">
-      <TeraReveal bride="Venkata Sujitha Reddy" groom="Srikar Reddy" />
+      <TeraReveal
+        bride="Venkata Sujitha Reddy" groom="Srikar Reddy"
+        onOpen={() => music.play()}
+      />
       <ScrollThread />
       <PetalCanvas />
       <PetalTrail />
@@ -96,19 +110,25 @@ function App() {
         <a className="brand" href="#home" onClick={e => { e.preventDefault(); nav('home') }}>S <i>&</i> S<span>THE WEDDING</span></a>
         <button className="mobile-menu" onClick={() => setMenu(!menu)} aria-label="Toggle menu">{menu ? <X /> : <Menu />}</button>
         <nav className={menu ? 'nav-links show' : 'nav-links'}>
-          {['Our Story', 'Moments', 'Celebrations', 'The Details', 'RSVP'].map((x, i) =>
-            <button key={x} onClick={() => nav(['story', 'moments', 'events', 'details', 'rsvp'][i])}>{x}</button>)}
+          <button onClick={() => nav('story')}>Our Story</button>
+          {hasTraditions && <button onClick={() => nav('rituals')}>Rituals</button>}
+          <button onClick={() => nav('events')}>Celebrations</button>
+          <button onClick={() => nav('details')}>The Details</button>
+          <button onClick={() => nav('rsvp')}>RSVP</button>
         </nav>
-        <button
-          className={`sound-button${music ? ' on' : ''}`}
-          onClick={() => setMusic(!music)}
-          title="Decorative sound toggle"
-        >
-          {music
-            ? <span className="wave" aria-hidden="true"><i /><i /><i /><i /></span>
-            : <Music2 size={15} />}
-          <span>{music ? 'SOUND ON' : 'SOUND OFF'}</span>
-        </button>
+        {music.ready && (
+          <button
+            className={`sound-button${music.on ? ' on' : ''}`}
+            onClick={music.toggle}
+            aria-pressed={music.on}
+            title={music.on ? 'Pause the music' : 'Play the music'}
+          >
+            {music.on
+              ? <span className="wave" aria-hidden="true"><i /><i /><i /><i /></span>
+              : <Music2 size={15} />}
+            <span>{music.on ? 'SOUND ON' : 'SOUND OFF'}</span>
+          </button>
+        )}
       </header>
 
       <main>
@@ -150,17 +170,27 @@ function App() {
             <FloralMark className="hero-flower" />
           </div>
 
-          <div className="hero-bottom"><span>SCROLL TO FEEL THE LOVE</span><div /><span>01 / 05</span></div>
+          <div className="hero-bottom"><span>SCROLL TO FEEL THE LOVE</span><div /><span>01 / {total}</span></div>
           <span className="floating-heart h1">♡</span><span className="floating-heart h2">♡</span>
         </section>
 
         <section className="intro section-pad" id="story">
-          <Reveal variant="up" className="section-index">01 <span>— THE INVITATION</span></Reveal>
+          <Reveal variant="up" className="section-index">{no('story')} <span>— THE INVITATION</span></Reveal>
           <div className="intro-grid">
             <Reveal variant="left" className="intro-ornament">
-              <Kolam size={170} />
-              <span>శ్రీరస్తు</span>
-              <small>BY THE GRACE OF THE DIVINE</small>
+              {/* the watercolour portrait when it exists, the drawn muggu when not */}
+              <ArchFrame
+                slot="couplePortrait"
+                alt="Sujitha and Srikar walking hand in hand along a paddy field at sunset"
+                telugu="శ్రీరస్తు"
+                caption="By the grace of the divine"
+              >
+                <div className="ornament-fallback">
+                  <Kolam size={150} />
+                  <span>శ్రీరస్తు</span>
+                  <small>BY THE GRACE OF THE DIVINE</small>
+                </div>
+              </ArchFrame>
             </Reveal>
             <Reveal variant="right" delay={140} className="intro-text rv-stagger">
               <p className="eyebrow rose">A NOTE FROM OUR FAMILIES</p>
@@ -172,41 +202,22 @@ function App() {
           </div>
         </section>
 
-        {/* Ritual film-strip — each frame appears only if its asset exists */}
-        <section className="rituals section-pad" id="moments">
-          <Reveal variant="up" className="section-index">02 <span>— THE RITUALS</span></Reveal>
-          <Reveal variant="up" delay={80} className="section-heading rv-stagger">
-            <p className="eyebrow rose">మా వేడుకలు</p>
-            <h2>Every ritual,<br /><em>a promise kept.</em></h2>
-            <p>The small sacred moments that make a Telugu wedding.</p>
-          </Reveal>
-          <Reveal variant="blur" delay={120}><MomentsGallery /></Reveal>
-          <div className="ritual-grid">
-            <Reveal variant="up" delay={60}>
-              <CinemaImage
-                slot="jeelakarra" effect="kenburns"
-                telugu="జీలకర్ర బెల్లం" caption="Cumin & jaggery — the first vow"
-                alt="Bride and groom placing a paste of cumin and jaggery on each other's heads"
-              ><Kalash className="cinema-ph" /></CinemaImage>
+        {/* Scene 8 — round tradition vignettes. The whole section stays out of
+            the document until at least one of the four icons exists. */}
+        {hasTraditions && (
+          <section className="rituals section-pad" id="rituals">
+            <Reveal variant="up" className="section-index">{no('rituals')} <span>— THE RITUALS</span></Reveal>
+            <Reveal variant="up" delay={80} className="section-heading rv-stagger">
+              <p className="eyebrow rose">మా వేడుకలు</p>
+              <h2>Every ritual,<br /><em>a promise kept.</em></h2>
+              <p>The small sacred moments that make a Telugu wedding.</p>
             </Reveal>
-            <Reveal variant="up" delay={140}>
-              <CinemaImage
-                slot="talambralu" effect="kenburns-out"
-                telugu="తలంబ్రాలు" caption="A shower of rice and pearls"
-                alt="Rice mixed with pearls showering over the couple"
-              ><FloralMark className="cinema-ph" /></CinemaImage>
-            </Reveal>
-            <Reveal variant="up" delay={220}>
-              <CinemaImage
-                slot="mehendi" effect="pan"
-                telugu="గోరింటాకు" caption="Mehendi — henna and laughter"
-                alt="Intricate henna on the bride's hands"
-              ><Kolam size={120} className="cinema-ph" /></CinemaImage>
-            </Reveal>
-          </div>
-        </section>
+            <Reveal variant="up" delay={120}><TraditionIcons /></Reveal>
+          </section>
+        )}
 
         <section className="count-section">
+          <SceneBand slot="countdownBand" opacity={0.26} />
           <div className="count-bg-mark"><FloralMark /></div>
           <Reveal variant="up"><p className="eyebrow">THE COUNTDOWN TO FOREVER</p></Reveal>
           <Reveal variant="up" delay={90}><h2><span className="shimmer-light">Our day is almost here</span> <span>♡</span></h2></Reveal>
@@ -216,7 +227,7 @@ function App() {
         </section>
 
         <section className="events section-pad" id="events">
-          <Reveal variant="up" className="section-index">03 <span>— THE CELEBRATIONS</span></Reveal>
+          <Reveal variant="up" className="section-index">{no('events')} <span>— THE CELEBRATIONS</span></Reveal>
           <Reveal variant="up" delay={80} className="section-heading rv-stagger">
             <p className="eyebrow rose">SAVE THE DATES</p>
             <h2>Come for the rituals.<br /><em>Stay for the memories.</em></h2>
@@ -227,7 +238,10 @@ function App() {
               <article className="event-card reception">
                 <div className="event-card-top"><span>THE EVENING BEFORE</span><span>01</span></div>
                 <div className="event-illustration">
-                  <CinemaImage slot="receptionNight" className="event-photo" effect="kenburns" alt="Wedding reception stage at night">
+                  <CinemaImage
+                    slot="receptionNight" className="event-photo" effect="kenburns" grade="soft"
+                    alt="Reception at night — the flower-decked stage, strung lights and rows of brass diyas"
+                  >
                     <>
                       <div className="moon" /><div className="lamp lamp-a">✧</div>
                       <div className="lamp lamp-b">✧</div><div className="event-arch" />
@@ -250,7 +264,10 @@ function App() {
               <article className="event-card wedding">
                 <div className="event-card-top"><span>THE BIG DAY</span><span>02</span></div>
                 <div className="event-illustration">
-                  <CinemaImage slot="mangalsutra" className="event-photo" effect="kenburns-out" alt="Groom tying the mangalsutra during the muhurtham">
+                  <CinemaImage
+                    slot="mangalsutra" className="event-photo" effect="kenburns-out" grade="soft"
+                    alt="The muhurtham at sunrise — the couple exchanging garlands before the sacred fire"
+                  >
                     <>
                       <div className="sun" /><div className="event-arch" />
                       <div className="mango-leaf">❧</div>
@@ -273,7 +290,7 @@ function App() {
         </section>
 
         <section className="details section-pad" id="details">
-          <Reveal variant="up" className="section-index">04 <span>— THE PLACE</span></Reveal>
+          <Reveal variant="up" className="section-index">{no('details')} <span>— THE PLACE</span></Reveal>
           <Reveal variant="zoom" delay={80}>
             <div className="details-card">
               <div className="details-copy">
@@ -289,7 +306,10 @@ function App() {
                 >GET DIRECTIONS <ArrowUpRight size={15} /></a>
               </div>
               <div className="map-art">
-                <CinemaImage slot="mandapam" className="map-photo" effect="drift" alt="The Kalyana Mandapam decorated for the wedding">
+                <CinemaImage
+                  slot="mandapam" className="map-photo" effect="drift" grade="soft"
+                  alt="K.S.C. Kalyana Mandapam, Mydukur, decorated for the wedding"
+                >
                   <>
                     <div className="map-circle c1" /><div className="map-circle c2" />
                     <div className="map-road road1" /><div className="map-road road2" />
@@ -305,6 +325,7 @@ function App() {
         </section>
 
         <section className="rsvp-section" id="rsvp">
+          <SceneBand slot="rsvpBand" opacity={0.3} position="center 40%" />
           <GlowOrbs orbs={[
             { kind: 'pasupu', size: 220, top: '12%', left: '6%', dur: 18 },
             { kind: 'kumkum', size: 190, top: '52%', left: '78%', dur: 15 },
