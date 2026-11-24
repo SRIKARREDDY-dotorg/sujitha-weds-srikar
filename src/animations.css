@@ -789,6 +789,17 @@ body.tera-locked { overflow: hidden; }
 .cinema-img.loaded.fx-drift { animation: kb-drift 24s ease-in-out 1.6s infinite alternate; }
 .cinema-img.fx-none { animation: none; }
 
+/* The tradition icons are drawn small on a wide paper margin, so they need
+   holding at a zoom rather than panning. The un-loaded/loaded transforms are
+   overridden too, or the image would jump from scale(1) into the animation. */
+.cinema-img.fx-icon { transform: scale(1.46); }
+.cinema-img.fx-icon.loaded { transform: scale(1.4); }
+.cinema-img.loaded.fx-icon { animation: icon-float 17s ease-in-out 1.6s infinite alternate; }
+@keyframes icon-float {
+  from { transform: scale(1.4) translate(0, 0); }
+  to { transform: scale(1.46) translate(-.8%, -1.4%); }
+}
+
 @keyframes kb-in {
   from { transform: scale(1) translate(0, 0); }
   to { transform: scale(1.13) translate(-1.6%, -2.2%); }
@@ -906,10 +917,21 @@ body.tera-locked { overflow: hidden; }
 .map-photo { position: absolute; inset: 0; }
 .map-photo .cinema-frame { aspect-ratio: auto; height: 100%; background: transparent; }
 .map-photo .cinema-caption { display: none; }
-.map-photo.cinema-found ~ .map-pin,
-.map-photo.cinema-found ~ .map-label { color: #fff6ea; }
-.map-photo.cinema-found ~ .map-label { text-shadow: 0 2px 12px rgba(40, 20, 26, .75); }
-.map-photo.cinema-found ~ .map-pin { background: rgba(255, 250, 247, .95); color: #a96579; }
+/* a bare label vanishes over the bright venue painting — give it a pill */
+.map-photo.cinema-found ~ .map-label {
+  color: #fff4e4;
+  padding: 9px 16px 10px;
+  background: rgba(58, 24, 34, .52);
+  border: 1px solid rgba(255, 240, 210, .3);
+  backdrop-filter: blur(3px);
+  text-shadow: 0 1px 8px rgba(30, 10, 16, .7);
+}
+.map-photo.cinema-found ~ .map-label span { color: #f3dec4; }
+.map-photo.cinema-found ~ .map-pin {
+  background: rgba(255, 250, 247, .96);
+  color: #a96579;
+  box-shadow: 0 10px 24px rgba(40, 20, 26, .4);
+}
 
 .cinema-missing .cinema-frame::after {
   content: "";
@@ -985,6 +1007,8 @@ body.tera-locked { overflow: hidden; }
   object-fit: cover;
   animation: kb-in 34s ease-in-out infinite alternate;
 }
+/* the scrim — a wash of the section's own colour over the art */
+.scene-band i { position: absolute; inset: 0; display: block; }
 
 /* ---------- ArchFrame ------------------------------------------------- */
 .arch-frame { position: relative; will-change: transform; }

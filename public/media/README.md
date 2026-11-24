@@ -7,7 +7,7 @@ Served assets. Filenames must match exactly; the extension is flexible —
 Nothing here is required: every slot falls back to animated CSS/SVG art, and
 sections with no art hide themselves entirely rather than show placeholders.
 
-## In place
+## In place — all 8 scenes
 
 | File | Ratio | Where it appears |
 |---|---|---|
@@ -15,24 +15,37 @@ sections with no art hide themselves entirely rather than show placeholders.
 | `couple-portrait` | 3:4 | Arch frame in "The Invitation" (walking the paddy path) |
 | `mangalsutra` | 4:3 | The Wedding card (muhurtham at sunrise) |
 | `reception-night` | 4:3 | The Reception card (evening stage) |
+| `mandapam-wide` | 16:9 | Venue panel (the decorated mandapam) |
+| `countdown-band` | ~2.6:1 | Texture behind the countdown, under a maroon scrim |
+| `rsvp-band` | 16:9 | Texture behind the RSVP (oonjal swing), bottom-aligned |
+| `tradition-1` … `tradition-4` | 1:1 | Round icon row in The Rituals |
 | `nurella-thodu.mp3` | — | Background music; starts when the tera opens |
 
-## Still to come
+The tradition icons are labelled for what they depict —
+కలశం (kalash) · తలంబ్రాలు (rice & pearls) · పసుపు (turmeric) ·
+మల్లెపూలు (jasmine garland). If you swap a file, update `TRADITIONS` in
+`src/media.jsx` to match, or the caption will describe the wrong thing.
 
-| Scene | File | Ratio | Where it will appear |
-|---|---|---|---|
-| 5. Venue and map | `mandapam-wide` | 16:9 | Fills the venue panel beside "A place to gather" |
-| 6. Countdown | `countdown-band` | 16:9 | Soft band behind the countdown (renders at 26% opacity) |
-| 7. RSVP and footer | `rsvp-band` | 16:9 | Soft band behind the RSVP form (30% opacity) |
-| 8. Tradition icons | `tradition-1` … `tradition-4` | 1:1 | Round icon row; **unlocks the whole Rituals section**, which is hidden until at least one exists |
+### Known issue: `countdown-band`
 
-The four tradition icons are labelled, in order:
-జీలకర్ర బెల్లం (cumin & jaggery) · తలంబ్రాలు (rice & pearls) ·
-మాంగళ్య ధారణ (the sacred knots) · గోరింటాకు (mehendi).
-Fewer than four is fine — only the ones present are shown.
+The source (`assets-src/Countdown.png`) has a calendar as its focal point, and
+the AI rendered it with garbled text and the wrong dates circled — 6, 11, 12,
+14 and 19 as well as 13. On a wedding invitation that is a real risk of
+misleading a guest, so the served crop deliberately excludes it, keeping only
+the diyas, petals and muggu. To use the full composition, regenerate the scene
+with `no calendar, no text, no numbers, no writing` in the prompt.
 
-Scenes 6 and 7 sit behind text at low opacity, so prefer calm, wide,
-low-contrast compositions with no faces near the centre.
+### Band tuning
+
+Bands sit behind body text. Tune the `scrim` prop (a wash of the section's own
+colour) before touching `opacity` — lowering opacity alone fades the art toward
+white, which on the dark countdown section makes contrast worse, not better.
+
+## Optional extras
+
+Still unused, and the site is complete without them:
+`hero-muhurtham` (video, replaces the hero still) and `diya-loop`
+(a real flame in the countdown band) — both via `scripts/prepare-media.sh`.
 
 ## Adding one
 

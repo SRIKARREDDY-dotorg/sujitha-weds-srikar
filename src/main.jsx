@@ -217,7 +217,10 @@ function App() {
         )}
 
         <section className="count-section">
-          <SceneBand slot="countdownBand" opacity={0.26} />
+          <SceneBand
+            slot="countdownBand" opacity={0.55} position="center 62%"
+            scrim="linear-gradient(180deg, rgba(120,81,93,.82), rgba(128,89,102,.7) 45%, rgba(120,81,93,.84))"
+          />
           <div className="count-bg-mark"><FloralMark /></div>
           <Reveal variant="up"><p className="eyebrow">THE COUNTDOWN TO FOREVER</p></Reveal>
           <Reveal variant="up" delay={90}><h2><span className="shimmer-light">Our day is almost here</span> <span>♡</span></h2></Reveal>
@@ -325,7 +328,11 @@ function App() {
         </section>
 
         <section className="rsvp-section" id="rsvp">
-          <SceneBand slot="rsvpBand" opacity={0.3} position="center 40%" />
+          {/* bottom-aligned: keeps the couple's faces clear of the headline */}
+          <SceneBand
+            slot="rsvpBand" opacity={0.5} position="center 96%"
+            scrim="linear-gradient(180deg, rgba(243,226,229,.76), rgba(248,238,238,.66) 50%, rgba(243,226,229,.8))"
+          />
           <GlowOrbs orbs={[
             { kind: 'pasupu', size: 220, top: '12%', left: '6%', dur: 18 },
             { kind: 'kumkum', size: 190, top: '52%', left: '78%', dur: 15 },

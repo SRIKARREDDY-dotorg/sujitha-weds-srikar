@@ -237,11 +237,13 @@ export function HeroFilm({ children, className = '', onMedia }) {
    Shows only the ones whose art exists, and nothing at all until the first
    file lands, so the section never renders as empty placeholders.
    ========================================================================== */
+// Labels describe what each icon actually depicts — kalash, rice, turmeric,
+// jasmine. Keep these in step with the art if you ever swap a file.
 export const TRADITIONS = [
-  { slot: 'tradition1', telugu: 'జీలకర్ర బెల్లం', caption: 'Cumin & jaggery', alt: 'Jeelakarra Bellam ritual' },
-  { slot: 'tradition2', telugu: 'తలంబ్రాలు', caption: 'Rice & pearls', alt: 'Talambralu ritual' },
-  { slot: 'tradition3', telugu: 'మాంగళ్య ధారణ', caption: 'The sacred knots', alt: 'Mangalya Dharana ritual' },
-  { slot: 'tradition4', telugu: 'గోరింటాకు', caption: 'Mehendi', alt: 'Gorintaku, the mehendi ritual' },
+  { slot: 'tradition1', telugu: 'కలశం', caption: 'The sacred kalash', alt: 'A brass kalash topped with a coconut and mango leaves' },
+  { slot: 'tradition2', telugu: 'తలంబ్రాలు', caption: 'Rice & pearls', alt: 'A brass plate heaped with talambralu rice' },
+  { slot: 'tradition3', telugu: 'పసుపు', caption: 'Turmeric for blessings', alt: 'A bowl of turmeric paste beside mango leaves' },
+  { slot: 'tradition4', telugu: 'మల్లెపూలు', caption: 'Jasmine garland', alt: 'A woven garland of jasmine buds' },
 ]
 
 export function TraditionIcons({ items = TRADITIONS }) {
@@ -254,8 +256,8 @@ export function TraditionIcons({ items = TRADITIONS }) {
         <figure className="tradition" key={t.slot} style={{ '--d': `${i * 110}ms` }}>
           <div className="tradition-disc">
             <CinemaImage
-              slot={t.slot} alt={t.alt} effect="kenburns-slow"
-              grade="soft" overlay={false} caption={null} telugu={null}
+              slot={t.slot} alt={t.alt} effect="icon"
+              grade="none" overlay={false} caption={null} telugu={null}
             />
           </div>
           <figcaption>
@@ -271,14 +273,25 @@ export function TraditionIcons({ items = TRADITIONS }) {
 /* ==========================================================================
    SceneBand — a full-width illustration behind a section's content
    ========================================================================== */
-export function SceneBand({ slot, opacity = 0.3, position = 'center' }) {
+/**
+ * A band sits behind body text, so contrast cannot be left to chance.
+ * `scrim` is a wash of the section's own colour laid over the art: it holds
+ * the section's identity and guarantees text legibility no matter how busy
+ * or bright the illustration turns out to be. Tune `scrim` first, not
+ * `opacity` — lowering opacity alone just fades the art toward white, which
+ * on a dark section makes the contrast problem worse, not better.
+ */
+export function SceneBand({ slot, opacity = 0.3, position = 'center', scrim }) {
   const cfg = SLOTS[slot] || {}
   const { src, state } = useFirstAvailable(cfg.file, 'image')
   if (state !== 'found') return null
   return (
     <span className="scene-band" aria-hidden="true">
-      <img src={src} alt="" loading="lazy" decoding="async"
-        style={{ opacity, objectPosition: position }} />
+      <img
+        src={src} alt="" loading="lazy" decoding="async"
+        style={{ opacity, objectPosition: position }}
+      />
+      {scrim && <i style={{ background: scrim }} />}
     </span>
   )
 }
