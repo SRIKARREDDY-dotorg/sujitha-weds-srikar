@@ -139,6 +139,62 @@ Rendered with `mix-blend-mode: screen`, so **shoot it on near-black**.
 
 ---
 
+## 2b. Which model to use
+
+Two separate jobs. Nothing generates a good wedding video straight from text —
+make the still first, then animate that exact still.
+
+### Step 1 — the still
+
+| Model | Where | Why for this |
+|---|---|---|
+| **Nano Banana Pro** (Gemini image) | Gemini app, Vertex AI | **Best for consistency.** Feed it a reference face and it holds the same two people across all 11 slots. Start here. |
+| **Midjourney v7** | midjourney.com, Discord | Most beautiful light and fabric. Use omni-reference / `--cref` for faces. |
+| **Flux.1 Kontext / Flux 2** | BFL API, Replicate, fal.ai | Best photoreal skin and silk texture; Kontext edits one detail without redrawing the frame. |
+| **Seedream 4** | Dreamina / BytePlus | Very strong on South Asian faces and jewellery specifically. |
+
+### Step 2 — animate the still (image-to-video)
+
+| Model | Where | Why for this |
+|---|---|---|
+| **Kling 2.x** | klingai.com | **Best pick overall.** Strongest at human motion and flowing fabric — saree pallu, falling talambralu. Daily free credits, cheap top-ups. |
+| **Google Veo 3.x** | Gemini app (AI Pro/Ultra), Flow, Vertex AI | Highest fidelity and best camera control. Priciest; generates audio you don't need (the site mutes it). |
+| **Minimax Hailuo 02** | hailuoai.video | Near-Kling quality for less. Good fallback when credits run out. |
+| **Luma Ray** (Dream Machine) | lumalabs.ai | Has a **native loop option** — the easiest route for `diya-loop`. |
+| **Runway Gen-4** | runwayml.com | First/last-frame keyframing when you want an exact end state. |
+| **Wan 2.2** | open weights, ComfyUI | Free and unlimited if you have a GPU. Slower, needs setup. |
+
+Only two slots are video (`hero-muhurtham`, `diya-loop`), so you need very few
+generations — budget accordingly rather than buying a big plan.
+
+### Do this instead, for the hero
+
+For *your own wedding*, don't generate strangers' faces. Take a real
+engagement or pre-wedding **photo of Sujitha and Srikar**, feed it to Kling or
+Veo as the image input, and prompt only the motion:
+
+> Slow cinematic push-in. Keep faces and clothing exactly as in the photo.
+> Gentle fabric movement, rice grains and petals drifting down through warm
+> morning light. No change to identity, no head turn, subtle camera drift only.
+
+That gets you genuinely life-like *and* actually them — which no prompt can
+fake. Use the text prompts in this file for the ritual close-ups where no face
+is recognisable (hands, mehendi, mangalsutra, mandapam, toranam).
+
+**Caveat:** every hosted model filters uploads of real identifiable people.
+Kling and Runway accept your own photos; Veo and Sora are stricter. If an
+upload is refused, the ritual close-ups above are all faceless by design and
+will pass.
+
+### Seamless loops
+
+Image-to-video models do not loop — the last frame never matches the first, so
+the hero would visibly jump every 8 seconds. Fix it with a palindrome: play
+forward, then reversed. On a slow push-in this is invisible. `scripts/prepare-media.sh`
+does it for you (see below).
+
+---
+
 ## 3. Export settings
 
 | | Max width | Target size | Notes |
@@ -152,12 +208,13 @@ Rendered with `mix-blend-mode: screen`, so **shoot it on near-black**.
 Quick conversions:
 
 ```bash
-# still → AVIF + WebP
+# stills → AVIF + WebP
 npx @squoosh/cli --avif '{"cqLevel":32}' --resize '{"width":1600}' -d public/media talambralu.png
 
-# video → looping WebM, no audio
-ffmpeg -i raw.mp4 -an -vf "scale=1920:-2,fps=30" -c:v libvpx-vp9 \
-  -crf 34 -b:v 0 -row-mt 1 public/media/hero-muhurtham.webm
+# videos → seamless loop, both formats, poster frame
+brew install ffmpeg      # once
+scripts/prepare-media.sh hero-muhurtham ~/Downloads/kling-out.mp4 --loop --poster
+scripts/prepare-media.sh diya-loop ~/Downloads/flame.mp4 --loop --width 720
 ```
 
 ---
