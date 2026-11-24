@@ -1,0 +1,892 @@
+/* ==========================================================================
+   Traditional Telugu wedding motion layer
+   Effects: tera (curtain) reveal · talambralu shower · falling petals ·
+   toranam garland sway · self-drawing muggu (kolam) · diya flicker ·
+   pasupu glow · gold shimmer · scroll reveals · parallax · petal cursor trail
+   ========================================================================== */
+
+:root {
+  --marigold: #ef9020;
+  --marigold-2: #f7c13e;
+  --kumkum: #c0392f;
+  --pasupu: #e8b43c;
+  --jasmine: #fffaf2;
+  --silk: #8c2f4a;
+}
+
+/* ---------- 1. Tera (curtain) reveal ---------------------------------- */
+body.tera-locked { overflow: hidden; }
+
+.tera {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 40%, #fdf2f1, #f2d9dd 70%);
+}
+.tera.tera-open { pointer-events: none; }
+.tera.tera-gone { display: none; }
+
+.tera-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 52%;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .11) 0 11px, transparent 11px 22px),
+    linear-gradient(170deg, #9c3350 0%, #7e2540 45%, #96304c 100%);
+  box-shadow: inset 0 0 120px rgba(50, 10, 24, .45);
+  transition: transform 1.55s cubic-bezier(.68, .02, .22, 1);
+  will-change: transform;
+}
+.tera-panel::before {
+  /* gold zari border */
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+  background: linear-gradient(180deg, #e9c87d, #c79a4e 40%, #f2dca3 60%, #b8883f);
+  box-shadow: 0 0 22px rgba(233, 200, 125, .55);
+}
+.tera-panel::after {
+  /* woven paisley/buta motif field */
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .22;
+  background-image:
+    radial-gradient(circle at 20% 18%, #f4d89b 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 48%, #f4d89b 0 2px, transparent 3px),
+    radial-gradient(circle at 42% 78%, #f4d89b 0 2px, transparent 3px);
+  background-size: 92px 108px;
+}
+.tera-left { left: 0; border-right: 1px solid rgba(0, 0, 0, .2); }
+.tera-left::before { right: 0; }
+.tera-right { right: 0; }
+.tera-right::before { left: 0; }
+.tera-open .tera-left { transform: translateX(-102%); }
+.tera-open .tera-right { transform: translateX(102%); }
+
+.tera-card {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  color: #f7e7cf;
+  padding: 0 26px;
+  transition: opacity .5s ease, transform .6s ease;
+}
+.tera-open .tera-card { opacity: 0; transform: scale(.94); }
+
+.tera-kalash { width: 74px; margin: 0 auto 14px; color: var(--marigold-2); animation: kalash-breathe 3.6s ease-in-out infinite; }
+.tera-om { font: 500 20px 'Noto Serif Telugu', serif; letter-spacing: 3px; color: #f1d9a7; }
+.tera-monogram { font: 500 clamp(62px, 13vw, 108px)/1 'Cormorant Garamond', serif; margin: 10px 0 4px; }
+.tera-monogram i { font-family: 'Great Vibes', cursive; color: #f0bd8e; }
+.tera-names { font: italic clamp(19px, 3.4vw, 27px) 'Cormorant Garamond', serif; color: #f6e3cb; }
+.tera-date { font-size: 9.5px; letter-spacing: 3.4px; margin-top: 12px; color: #f2d7b4; }
+
+.tera-open-btn {
+  margin-top: 26px;
+  border: 1px solid rgba(240, 212, 160, .7);
+  background: rgba(255, 255, 255, .07);
+  color: #f6e5cc;
+  padding: 14px 24px;
+  font-size: 9px;
+  letter-spacing: 2.6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  backdrop-filter: blur(2px);
+  animation: tap-pulse 2.4s ease-in-out infinite;
+  transition: background .25s, transform .25s;
+}
+.tera-open-btn:hover { background: rgba(255, 255, 255, .16); transform: translateY(-2px); }
+
+@keyframes tap-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 220, 163, .4); }
+  60% { box-shadow: 0 0 0 16px rgba(242, 220, 163, 0); }
+}
+@keyframes kalash-breathe {
+  50% { transform: translateY(-6px) scale(1.04); }
+}
+
+/* ---------- 2. Particle canvas + cursor trail ------------------------- */
+.petal-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.trail-dot {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 60% 40% 55% 45%;
+  animation: trail-fade .9s ease-out forwards;
+}
+@keyframes trail-fade {
+  from { opacity: .85; transform: scale(1) rotate(0deg); }
+  to { opacity: 0; transform: scale(.25) translateY(16px) rotate(90deg); }
+}
+
+/* ---------- 3. Scroll progress with marigold bead --------------------- */
+.scroll-thread {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 100;
+  background: rgba(120, 81, 93, .18);
+}
+.scroll-thread i {
+  display: block;
+  height: 100%;
+  width: var(--p, 0%);
+  background: linear-gradient(90deg, var(--kumkum), var(--marigold), var(--marigold-2));
+  box-shadow: 0 0 10px rgba(239, 144, 32, .7);
+  transition: width .12s linear;
+}
+.scroll-thread b {
+  position: absolute;
+  top: 50%;
+  left: var(--p, 0%);
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe9a8, var(--marigold));
+  box-shadow: 0 0 12px rgba(247, 193, 62, .9);
+  transition: left .12s linear;
+}
+
+/* ---------- 4. Toranam (mango-leaf garland) --------------------------- */
+.toranam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* an SVG is a replaced element: left/right alone leave it at its intrinsic
+     width (height x viewBox ratio), so it must be stretched explicitly */
+  width: 100%;
+  height: 86px;
+  z-index: 4;
+  pointer-events: none;
+  overflow: visible;
+}
+.toranam .leaf {
+  transform-origin: top center;
+  animation: leaf-sway 4.6s ease-in-out infinite;
+}
+@keyframes leaf-sway {
+  0%, 100% { transform: rotate(-4.5deg); }
+  50% { transform: rotate(4.5deg); }
+}
+
+/* hanging jasmine / marigold strings */
+.hang-string {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  z-index: 4;
+  pointer-events: none;
+  transform-origin: top center;
+  animation: string-swing 5.4s ease-in-out infinite;
+  background: linear-gradient(#cbb29a, transparent);
+}
+.hang-string span {
+  position: absolute;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  margin-left: -5.5px;
+  border-radius: 50%;
+}
+@keyframes string-swing {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* ---------- 5. Muggu / kolam self-drawing ---------------------------- */
+.kolam path, .kolam circle, .kolam line {
+  stroke-dasharray: var(--len, 1200);
+  stroke-dashoffset: var(--len, 1200);
+}
+.kolam.in path, .kolam.in circle, .kolam.in line {
+  animation: kolam-draw 2.6s cubic-bezier(.65, .02, .3, 1) forwards;
+}
+.kolam.in .k-dot { animation: kolam-dot .5s ease forwards; }
+.kolam path:nth-child(2) { animation-delay: .18s; }
+.kolam path:nth-child(3) { animation-delay: .36s; }
+.kolam path:nth-child(4) { animation-delay: .54s; }
+@keyframes kolam-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes kolam-dot {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ---------- 6. Diya (oil lamp) flicker ------------------------------- */
+.diya { position: relative; width: 56px; }
+.diya-bowl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  border-radius: 0 0 28px 28px;
+  background: linear-gradient(180deg, #8e5a36, #5f3620);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, .3);
+}
+.diya-flame {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  width: 13px;
+  height: 26px;
+  margin-left: -6.5px;
+  border-radius: 50% 50% 50% 50% / 68% 68% 32% 32%;
+  background: linear-gradient(180deg, #fff6c9, var(--marigold-2) 45%, #e8701d);
+  transform-origin: bottom center;
+  animation: flame-flicker 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(247, 180, 60, .9));
+}
+.diya-halo {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  width: 92px;
+  height: 92px;
+  margin-left: -46px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(247, 193, 62, .42), transparent 68%);
+  animation: halo-pulse 2.6s ease-in-out infinite;
+}
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1) rotate(-2deg) skewX(-2deg); }
+  25% { transform: scale(1.09, .94) rotate(3deg) skewX(3deg); }
+  50% { transform: scale(.93, 1.12) rotate(-3deg); }
+  75% { transform: scale(1.05, .97) rotate(2deg); }
+}
+@keyframes halo-pulse {
+  50% { opacity: .5; transform: scale(1.14); }
+}
+
+.diya-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(18px, 7vw, 64px);
+  /* halos reach ~70px above the bowl — keep clear of .count-foot */
+  margin-top: 82px;
+}
+.diya-row .diya { animation: diya-rise 1s ease both; }
+@keyframes diya-rise {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+/* ---------- 7. Pasupu (turmeric) + kumkum glow orbs ------------------ */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(26px);
+  mix-blend-mode: screen;
+  animation: orb-drift 14s ease-in-out infinite alternate;
+}
+.orb-pasupu { background: rgba(232, 180, 60, .42); }
+.orb-kumkum { background: rgba(200, 70, 90, .32); }
+.orb-jasmine { background: rgba(255, 255, 255, .5); }
+/* on an already-pale section a white orb reads as a smudge — keep it warm */
+.rsvp-section .glow-orb { opacity: .55; }
+@keyframes orb-drift {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(28px, -34px) scale(1.16); }
+  100% { transform: translate(-22px, 20px) scale(.92); }
+}
+
+/* ---------- 8. Gold zari shimmer on names --------------------------- */
+.shimmer {
+  background: linear-gradient(100deg, #6c4650 0 38%, #d9ab63 46%, #fff0c9 50%, #d9ab63 54%, #6c4650 62% 100%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: zari 5.5s ease-in-out infinite;
+}
+.shimmer-light {
+  background: linear-gradient(100deg, #f6e4e4 0 38%, #ffe6ab 48%, #fff8e2 50%, #ffe6ab 52%, #f6e4e4 62% 100%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: zari 5.5s ease-in-out infinite;
+}
+@keyframes zari {
+  0% { background-position: 150% 0; }
+  100% { background-position: -150% 0; }
+}
+
+/* ---------- 9. Telugu typewriter ------------------------------------- */
+.typewriter::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 1.05em;
+  margin-left: 3px;
+  background: currentColor;
+  vertical-align: -.15em;
+  animation: caret 1s steps(1) infinite;
+}
+.typewriter.done::after { animation: caret 1.4s steps(1) 3; opacity: 0; }
+@keyframes caret {
+  50% { opacity: 0; }
+}
+
+/* ---------- 10. Scroll reveals --------------------------------------- */
+.rv {
+  opacity: 0;
+  transition:
+    opacity .9s cubic-bezier(.22, .68, 0, 1) var(--rv-delay, 0ms),
+    transform 1s cubic-bezier(.22, .68, 0, 1) var(--rv-delay, 0ms),
+    filter .9s ease var(--rv-delay, 0ms);
+  will-change: opacity, transform;
+}
+.rv-up { transform: translateY(42px); }
+.rv-left { transform: translateX(-46px); }
+.rv-right { transform: translateX(46px); }
+.rv-zoom { transform: scale(.92); }
+.rv-blur { filter: blur(9px); transform: translateY(26px); }
+.rv-unfurl { transform: perspective(900px) rotateX(16deg) translateY(36px); transform-origin: top center; }
+.rv.in { opacity: 1; transform: none; filter: none; }
+
+.rv-stagger > * {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.22, .68, 0, 1);
+}
+.rv-stagger.in > * { opacity: 1; transform: none; }
+.rv-stagger.in > *:nth-child(1) { transition-delay: .05s; }
+.rv-stagger.in > *:nth-child(2) { transition-delay: .13s; }
+.rv-stagger.in > *:nth-child(3) { transition-delay: .21s; }
+.rv-stagger.in > *:nth-child(4) { transition-delay: .29s; }
+.rv-stagger.in > *:nth-child(5) { transition-delay: .37s; }
+.rv-stagger.in > *:nth-child(6) { transition-delay: .45s; }
+.rv-stagger.in > *:nth-child(7) { transition-delay: .53s; }
+.rv-stagger.in > *:nth-child(8) { transition-delay: .61s; }
+
+/* word-by-word headline lift */
+.lift-words span { display: inline-block; }
+.lift-words span i {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(.62em) rotate(4deg);
+  transition: opacity .7s ease, transform .85s cubic-bezier(.19, .9, .18, 1);
+  font-style: inherit;
+}
+.lift-words.in span i { opacity: 1; transform: none; }
+
+/* ---------- 11. Countdown heartbeat + flip ---------------------------- */
+.count-unit strong { display: inline-block; }
+.count-unit.tick strong { animation: digit-flip .55s cubic-bezier(.3, 1.4, .4, 1); }
+@keyframes digit-flip {
+  0% { transform: translateY(-34%) scale(.88); opacity: .25; filter: blur(2px); }
+  100% { transform: none; opacity: 1; filter: none; }
+}
+/* background-clip:text eats the trailing space, so space the heart manually */
+.count-section h2 .shimmer-light { margin-right: .3em; }
+.count-section h2 span { display: inline-block; animation: heartbeat 1.5s ease-in-out infinite; }
+.count-section h2 .shimmer-light { animation: zari 5.5s ease-in-out infinite; }
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.26); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.19); }
+  60% { transform: scale(1); }
+}
+
+/* ---------- 12. Card hover lift + gold sweep ------------------------- */
+.event-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform .5s cubic-bezier(.2, .8, .2, 1), box-shadow .5s ease;
+}
+.event-card:hover {
+  transform: translateY(-9px);
+  box-shadow: 0 28px 60px rgba(103, 68, 74, .16);
+}
+.event-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 242, 206, .55) 48%, transparent 58%);
+  transform: translateX(-120%);
+  transition: transform 1.1s ease;
+}
+.event-card:hover::after { transform: translateX(120%); }
+.event-card:hover .moon, .event-card:hover .sun { animation: celestial-glow 2.4s ease-in-out infinite; }
+@keyframes celestial-glow {
+  50% { box-shadow: 0 0 0 20px rgba(255, 255, 255, .34); transform: scale(1.06); }
+}
+.mango-leaf { animation: leaf-bob 5s ease-in-out infinite; transform-origin: top right; }
+@keyframes leaf-bob {
+  0%, 100% { transform: rotate(25deg); }
+  50% { transform: rotate(16deg) translateY(4px); }
+}
+.lamp { animation: lamp-twinkle 2.2s ease-in-out infinite; }
+.lamp-b { animation-delay: .7s; }
+@keyframes lamp-twinkle {
+  0%, 100% { opacity: .55; transform: scale(.9); }
+  50% { opacity: 1; transform: scale(1.12); text-shadow: 0 0 18px rgba(247, 193, 62, .9); }
+}
+
+/* ---------- 13. Map pin drop + sonar ---------------------------------- */
+.rv.in .map-pin { animation: pin-drop .95s cubic-bezier(.2, 1.5, .3, 1) both; }
+@keyframes pin-drop {
+  0% { opacity: 0; transform: rotate(-45deg) translateY(-70px) scale(.7); }
+  70% { opacity: 1; }
+  100% { opacity: 1; transform: rotate(-45deg) translateY(0) scale(1); }
+}
+.map-sonar {
+  position: absolute;
+  top: 43%;
+  left: 48%;
+  width: 34px;
+  height: 34px;
+  margin: 10px 0 0 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(169, 101, 121, .7);
+  animation: sonar 2.8s ease-out infinite;
+}
+.map-sonar.s2 { animation-delay: 1.4s; }
+@keyframes sonar {
+  0% { opacity: .8; transform: scale(.4); }
+  100% { opacity: 0; transform: scale(5.2); }
+}
+
+/* ---------- 14. Buttons: ripple + arrow nudge ------------------------ */
+.open-invite, .map-link, .rsvp-form button {
+  position: relative;
+  overflow: hidden;
+}
+.open-invite::before, .map-link::before, .rsvp-form button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 228, 176, .5), transparent 60%);
+  opacity: 0;
+  transform: scale(.4);
+  transition: opacity .5s ease, transform .6s ease;
+}
+.open-invite:hover::before, .map-link:hover::before, .rsvp-form button:hover::before {
+  opacity: 1;
+  transform: scale(1.6);
+}
+.open-invite svg { animation: nudge-down 1.9s ease-in-out infinite; }
+@keyframes nudge-down {
+  50% { transform: translateY(4px); }
+}
+.map-link { transition: transform .3s ease, box-shadow .3s ease; }
+.map-link:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(128, 89, 102, .34); }
+
+/* ---------- 15. Hero micro-motion ------------------------------------ */
+.sun-disc { animation: sun-breathe 9s ease-in-out infinite; }
+@keyframes sun-breathe {
+  50% { transform: translateX(-50%) scale(1.045); opacity: .9; }
+}
+.couple-art { animation: couple-settle 1.4s ease both .35s; }
+@keyframes couple-settle {
+  from { opacity: 0; }
+}
+/* opacity-only entrance so parallax + the :has() dimming can win */
+.hero-art { animation: art-fade 1.2s ease both; }
+@keyframes art-fade {
+  from { opacity: 0; }
+}
+.hero.film-on .hero-art { opacity: .18 !important; animation: none !important; }
+.hero.film-on .hero-bottom span, .hero.film-on .hero-bottom div { opacity: .85; }
+.bride { animation: sway-b 7s ease-in-out infinite 1.6s; transform-origin: bottom center; }
+.groom { animation: sway-g 7.6s ease-in-out infinite 1.6s; transform-origin: bottom center; }
+@keyframes sway-b {
+  0%, 100% { transform: rotate(-.7deg); }
+  50% { transform: rotate(.9deg) translateY(-2px); }
+}
+@keyframes sway-g {
+  0%, 100% { transform: rotate(.8deg); }
+  50% { transform: rotate(-.7deg) translateY(-2px); }
+}
+.veil { animation: veil-drift 6.5s ease-in-out infinite; }
+@keyframes veil-drift {
+  50% { transform: skewX(2.4deg) translateX(3px); }
+}
+.art-flower { animation: bloom-spin 11s linear infinite; }
+.f2 { animation-duration: 14s; animation-direction: reverse; }
+.f3 { animation-duration: 9s; }
+@keyframes bloom-spin {
+  to { transform: rotate(360deg); }
+}
+.hero-flower, .map-flower, .rsvp-flower, .count-bg-mark svg {
+  animation: mark-turn 48s linear infinite;
+}
+@keyframes mark-turn {
+  to { transform: rotate(360deg); }
+}
+.hero-bottom span:first-child { animation: scroll-hint 2.6s ease-in-out infinite; }
+@keyframes scroll-hint {
+  50% { opacity: .42; transform: translateY(2px); }
+}
+
+/* ---------- 16. Akshintalu burst (CSS one-shot, RSVP thanks) --------- */
+.thanks { animation: thanks-pop .7s cubic-bezier(.2, 1.5, .3, 1) both; }
+@keyframes thanks-pop {
+  from { opacity: 0; transform: scale(.9); }
+}
+.thanks svg { animation: check-in .6s cubic-bezier(.2, 1.6, .3, 1) .15s both; }
+@keyframes check-in {
+  from { transform: scale(0) rotate(-40deg); }
+}
+
+/* ---------- 17. Nav + sound button ----------------------------------- */
+.nav-links button { position: relative; transition: color .25s ease; }
+.nav-links button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -5px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--marigold), var(--kumkum));
+  transition: right .35s cubic-bezier(.2, .8, .2, 1);
+}
+.nav-links button:hover::after { right: 0; }
+.sound-button { transition: border-color .3s, color .3s; }
+.sound-button.on { border-color: var(--marigold); color: #9a5f33; }
+.sound-button.on svg { animation: note-bounce 1.1s ease-in-out infinite; }
+@keyframes note-bounce {
+  50% { transform: translateY(-3px) rotate(-8deg); }
+}
+
+/* sound wave bars when "on" */
+.wave { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }
+.wave i {
+  width: 2px;
+  background: var(--marigold);
+  animation: wave-bar .9s ease-in-out infinite;
+}
+.wave i:nth-child(2) { animation-delay: .15s; }
+.wave i:nth-child(3) { animation-delay: .3s; }
+.wave i:nth-child(4) { animation-delay: .45s; }
+@keyframes wave-bar {
+  0%, 100% { height: 3px; }
+  50% { height: 10px; }
+}
+
+/* ---------- 18. Section index ticker --------------------------------- */
+.section-index { overflow: hidden; }
+.rv.in > .section-index, .section-index.rv.in { }
+
+/* ==========================================================================
+   PHOTOREAL MEDIA LAYER — cinematic stills, video hero, ritual gallery
+   ========================================================================== */
+
+/* ---------- CinemaImage ---------------------------------------------- */
+.cinema { margin: 0; }
+.cinema-frame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: var(--ratio, 3/2);
+  background: linear-gradient(145deg, #f4e3e2, #f9efea);
+  isolation: isolate;
+}
+.cinema-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1.2s ease, transform 1.6s cubic-bezier(.2, .8, .2, 1);
+  will-change: transform, opacity;
+}
+.cinema-img.loaded { opacity: 1; transform: scale(1); }
+
+/* Ken Burns variants — start after the load-in transition settles */
+.cinema-img.loaded.fx-kenburns { animation: kb-in 18s ease-in-out 1.6s infinite alternate; }
+.cinema-img.loaded.fx-kenburns-slow { animation: kb-in 30s ease-in-out 1.6s infinite alternate; }
+.cinema-img.loaded.fx-kenburns-out { animation: kb-out 22s ease-in-out 1.6s infinite alternate; }
+.cinema-img.loaded.fx-pan { animation: kb-pan 26s ease-in-out 1.6s infinite alternate; }
+.cinema-img.loaded.fx-drift { animation: kb-drift 24s ease-in-out 1.6s infinite alternate; }
+.cinema-img.fx-none { animation: none; }
+
+@keyframes kb-in {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.13) translate(-1.6%, -2.2%); }
+}
+@keyframes kb-out {
+  from { transform: scale(1.14) translate(1.5%, 1.8%); }
+  to { transform: scale(1) translate(0, 0); }
+}
+@keyframes kb-pan {
+  from { transform: scale(1.11) translateX(-3%); }
+  to { transform: scale(1.11) translateX(3%); }
+}
+@keyframes kb-drift {
+  from { transform: scale(1.08) translate(-1.4%, 1.2%) rotate(-.4deg); }
+  to { transform: scale(1.12) translate(1.4%, -1.2%) rotate(.4deg); }
+}
+
+/* warm filmic grade so AI photos sit in the blush palette */
+.cinema-grade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(120, 60, 72, .14), transparent 36%, rgba(94, 48, 60, .26)),
+    linear-gradient(115deg, rgba(247, 193, 62, .13), transparent 52%, rgba(192, 57, 47, .10));
+  mix-blend-mode: multiply;
+}
+.cinema-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 90px rgba(80, 42, 52, .34);
+}
+.cinema-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .11;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  animation: grain-shift 7s steps(6) infinite;
+}
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-2%, 1%); }
+  40% { transform: translate(1%, -2%); }
+  60% { transform: translate(-1%, -1%); }
+  80% { transform: translate(2%, 2%); }
+}
+.cinema-fallback { position: absolute; inset: 0; }
+
+.cinema-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 2px 0;
+}
+.cc-telugu { font: 500 15px 'Noto Serif Telugu', serif; color: #b27683; }
+.cc-en { font-size: 10px; letter-spacing: 1.8px; color: #91787d; text-transform: uppercase; }
+
+/* ---------- HeroFilm -------------------------------------------------- */
+/* Always out of flow — the hero is a 2-column grid and this must not
+   become a third grid item. */
+.hero-film { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+.hero-film.no-media { overflow: visible; }
+.hero-film-video, .hero-film-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 32%;
+}
+.hero-film-video { opacity: 0; transition: opacity 1.5s ease; }
+.hero-film-video.playing { opacity: 1; }
+.hero-film-poster {
+  opacity: 1;
+  transition: opacity 1.2s ease;
+  animation: kb-in 26s ease-in-out infinite alternate;
+}
+.hero-film-poster.hidden { opacity: 0; }
+.hero-film-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, rgba(251, 243, 242, .95) 0%, rgba(249, 233, 236, .78) 34%, rgba(240, 217, 223, .28) 62%, rgba(120, 72, 84, .3) 100%),
+    linear-gradient(180deg, rgba(255, 250, 247, .5), transparent 30%, rgba(94, 50, 62, .34));
+}
+/* event-card illustration becomes a photo when the asset exists */
+.event-photo { position: absolute; inset: 0; }
+.event-photo .cinema-frame { aspect-ratio: auto; height: 100%; background: transparent; }
+.event-photo .cinema-caption { display: none; }
+.event-photo.cinema-missing .cinema-grade,
+.event-photo.cinema-missing .cinema-vignette,
+.map-photo.cinema-missing .cinema-grade,
+.map-photo.cinema-missing .cinema-vignette { display: none; }
+
+/* venue map panel becomes a photo of the mandapam when the asset exists */
+.map-photo { position: absolute; inset: 0; }
+.map-photo .cinema-frame { aspect-ratio: auto; height: 100%; background: transparent; }
+.map-photo .cinema-caption { display: none; }
+.map-photo.cinema-found ~ .map-pin,
+.map-photo.cinema-found ~ .map-label { color: #fff6ea; }
+.map-photo.cinema-found ~ .map-label { text-shadow: 0 2px 12px rgba(40, 20, 26, .75); }
+.map-photo.cinema-found ~ .map-pin { background: rgba(255, 250, 247, .95); color: #a96579; }
+
+/* placeholder ornament shown inside an empty cinema frame */
+.cinema-ph {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 46%;
+  max-width: 130px;
+  transform: translate(-50%, -50%);
+  color: #c79ca0;
+  opacity: .55;
+}
+.cinema-missing .cinema-frame::after {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border: 1px dashed rgba(190, 150, 152, .5);
+  pointer-events: none;
+}
+.event-photo.cinema-missing .cinema-frame::after,
+.map-photo.cinema-missing .cinema-frame::after { display: none; }
+
+/* ---------- MomentsGallery ------------------------------------------- */
+.moments { max-width: 1020px; margin: 0 auto; }
+.moments-stage {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: #efdedc;
+  box-shadow: 0 26px 70px rgba(103, 61, 71, .18);
+}
+.moment {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 1.4s ease, transform 5.6s ease-out;
+  pointer-events: none;
+}
+.moment.on { opacity: 1; transform: scale(1); pointer-events: auto; }
+.moment img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.moment-grade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(90, 44, 56, .1) 0%, transparent 42%, rgba(66, 30, 40, .76) 100%);
+}
+.moment figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 26px clamp(20px, 5%, 44px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+.moment figcaption .cc-telugu {
+  font-size: clamp(19px, 2.6vw, 27px);
+  color: #ffe8c9;
+  text-shadow: 0 2px 14px rgba(50, 20, 28, .6);
+  transform: translateY(14px);
+  opacity: 0;
+  transition: .9s cubic-bezier(.2, .8, .2, 1) .35s;
+}
+.moment figcaption .cc-en {
+  color: #f6e3dd;
+  letter-spacing: 2.4px;
+  font-size: 9.5px;
+  transform: translateY(14px);
+  opacity: 0;
+  transition: .9s cubic-bezier(.2, .8, .2, 1) .5s;
+}
+.moment.on figcaption .cc-telugu, .moment.on figcaption .cc-en { transform: none; opacity: 1; }
+
+.moments-dots { display: flex; justify-content: center; gap: 9px; margin-top: 18px; }
+.moments-dots button {
+  width: 24px;
+  height: 3px;
+  border: 0;
+  padding: 0;
+  background: rgba(150, 110, 118, .32);
+  transition: background .35s ease, width .35s ease;
+}
+.moments-dots button.on { background: linear-gradient(90deg, var(--kumkum), var(--marigold)); width: 42px; }
+
+/* ---------- ArchFrame ------------------------------------------------- */
+.arch-frame { position: relative; will-change: transform; }
+.arch-frame-inner {
+  overflow: hidden;
+  border-radius: 50% 50% 8px 8px / 32% 32% 3% 3%;
+  box-shadow: 0 22px 56px rgba(103, 61, 71, .2);
+}
+.arch-frame-gold {
+  position: absolute;
+  inset: -9px;
+  pointer-events: none;
+  border: 1px solid rgba(201, 158, 86, .75);
+  border-radius: 50% 50% 10px 10px / 32% 32% 3% 3%;
+  box-shadow: 0 0 26px rgba(201, 158, 86, .3), inset 0 0 26px rgba(201, 158, 86, .18);
+}
+
+/* ---------- DiyaLoop -------------------------------------------------- */
+.diya-loop {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  filter: saturate(1.15);
+}
+
+/* ---------- Ritual film-strip section ------------------------------- */
+.rituals { background: #fcf7f3; }
+.ritual-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  max-width: 1020px;
+  margin: 42px auto 0;
+}
+/* one ratio across the strip so the captions sit on a single baseline,
+   whatever ratio the generated art happens to be */
+.ritual-grid .cinema-frame { aspect-ratio: 3/2; box-shadow: 0 16px 42px rgba(103, 68, 74, .1); }
+
+/* the CSS art inside an event illustration was centred by the parent flexbox;
+   inside the fallback block it needs explicit centring */
+.event-illustration .event-arch { left: 50%; transform: translateX(-50%); }
+@media (max-width: 800px) { .ritual-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .ritual-grid { grid-template-columns: 1fr; gap: 26px; } }
+
+/* ---------- 19. Reduced motion: strip all of it ---------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .tera-panel { transition: opacity .3s linear; }
+  .tera.tera-open { opacity: 0; transition: opacity .3s linear; }
+  .rv, .rv-stagger > *, .lift-words span i { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
+  .kolam path, .kolam circle, .kolam line { stroke-dashoffset: 0 !important; animation: none !important; }
+  .diya-flame, .diya-halo, .glow-orb, .shimmer, .shimmer-light, .art-flower, .hero-flower,
+  .map-flower, .rsvp-flower, .count-bg-mark svg, .sun-disc, .couple-art, .bride, .groom, .veil,
+  .toranam .leaf, .hang-string, .mango-leaf, .lamp, .map-sonar, .count-section h2 span,
+  .count-unit.tick strong, .open-invite svg, .hero-bottom span:first-child, .tera-kalash,
+  .tera-open-btn, .wave i, .thanks, .thanks svg, .diya-row .diya {
+    animation: none !important;
+  }
+  .shimmer, .shimmer-light { -webkit-text-fill-color: currentColor; color: #6c4650; background: none; }
+  .count-section .shimmer-light { color: #f6e4e4; }
+  .cinema-img, .hero-film-poster, .cinema-grain, .moment { animation: none !important; }
+  .cinema-img { transform: none !important; }
+  .moment { transition: opacity .4s linear; }
+}
+
+/* ---------- 20. Small screens: calm it down -------------------------- */
+@media (max-width: 600px) {
+  .tera-panel { width: 56%; }
+  .toranam { height: 62px; }
+  .diya-row { gap: 22px; }
+  .diya { transform: scale(.82); }
+  .glow-orb { filter: blur(18px); }
+}
