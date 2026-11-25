@@ -1,7 +1,7 @@
 /* ==========================================================================
    Traditional Telugu wedding motion system
    ========================================================================== */
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 
 /* ---------- reduced motion ------------------------------------------- */
@@ -325,11 +325,16 @@ export function TeraReveal({
     <div className={`tera${state === 'open' ? ' tera-open' : ''}`} role="dialog" aria-label="Open the invitation">
       <div className="tera-panel tera-left" aria-hidden="true" />
       <div className="tera-panel tera-right" aria-hidden="true" />
+      <TeraPetals />
+      <HangStrings config={[[9, 132, 'jasmine'], [26, 86, 'marigold'], [74, 104, 'marigold'], [91, 150, 'jasmine']]} />
+      <span className="tera-halo" aria-hidden="true" />
       <Mandala className="tera-mandala" />
+      <div className="tera-lamp l" aria-hidden="true"><Diya /></div>
+      <div className="tera-lamp r" aria-hidden="true"><Diya delay={700} /></div>
       <div className="tera-card">
         <Kalash className="tera-kalash" />
         <div className="tera-om">శ్రీ రస్తు · శుభమస్తు</div>
-        <div className="tera-monogram">S <i>&</i> S</div>
+        <div className="tera-monogram"><b>S</b> <b><i>&</i></b> <b>S</b></div>
         <div className="tera-names">
           <span>{bride}</span><em>&</em><span>{groom}</span>
         </div>
@@ -339,6 +344,52 @@ export function TeraReveal({
           తెర తీయండి · OPEN THE INVITATION <ArrowRight size={14} />
         </button>
       </div>
+    </div>
+  )
+}
+
+/* ---------- Petals drifting down the curtain --------------------------
+   The global PetalCanvas sits below the tera's z-index, so the opening
+   screen needs its own layer. CSS-only: 18 nodes is cheaper than running a
+   second canvas, and it stops entirely once the tera unmounts. */
+// Saturated enough to read against the pale silk: near-white petals were
+// invisible on it. Blush rose, marigold and jasmine with a warm shadow.
+const TERA_PETAL_COLORS = ['#eeaebd', '#f4c3ce', '#fffdf8', '#efa65f', '#f5c87a', '#e394ab']
+
+export function TeraPetals({ count = 18 }) {
+  const reduced = useReducedMotion()
+  // generated once: re-randomising on every render would make them jump
+  const petals = useMemo(() => Array.from({ length: count }, (_, i) => ({
+    left: (i * 37 + 11) % 100,
+    size: 7 + ((i * 13) % 9),
+    delay: -((i * 1.37) % 11),
+    dur: 11 + ((i * 7) % 9),
+    drift: ((i % 5) - 2) * 26,
+    spin: 420 + ((i * 97) % 360),
+    opacity: 0.5 + ((i * 17) % 40) / 100,
+    color: TERA_PETAL_COLORS[i % TERA_PETAL_COLORS.length],
+  })), [count])
+
+  if (reduced) return null
+  return (
+    <div className="tera-petals" aria-hidden="true">
+      {petals.map((p, i) => (
+        <span
+          key={i}
+          className="tera-petal"
+          style={{
+            left: `${p.left}%`,
+            width: p.size,
+            height: p.size * 1.3,
+            background: p.color,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.dur}s`,
+            '--dx': `${p.drift}px`,
+            '--spin': `${p.spin}deg`,
+            '--o': p.opacity,
+          }}
+        />
+      ))}
     </div>
   )
 }

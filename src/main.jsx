@@ -133,7 +133,7 @@ function App() {
 
       <main>
         <section className={`hero${filmOn ? ' film-on' : ''}`} id="home">
-          <HeroFilm onMedia={onHeroMedia}>
+          <HeroFilm onMedia={onHeroMedia} rate={0.3}>
             <>
               <div className="hero-wash" />
               <div className="hero-grain" />
