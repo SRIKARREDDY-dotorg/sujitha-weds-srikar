@@ -11,7 +11,8 @@ sections with no art hide themselves entirely rather than show placeholders.
 
 | File | Ratio | Where it appears |
 |---|---|---|
-| `hero-muhurtham-poster` | 16:9 | Hero background (couple under the mandapam) |
+| `hero-muhurtham.mp4` | 16:9 | Hero background film, looping at half speed |
+| `hero-muhurtham-poster` | 16:9 | Hero poster — shows until the film plays, and instead of it under reduced motion |
 | `couple-portrait` | 3:4 | Arch frame in "The Invitation" (walking the paddy path) |
 | `mangalsutra` | 4:3 | The Wedding card (muhurtham at sunrise) |
 | `reception-night` | 4:3 | The Reception card (evening stage) |
@@ -43,9 +44,26 @@ white, which on the dark countdown section makes contrast worse, not better.
 
 ## Optional extras
 
-Still unused, and the site is complete without them:
-**`hero-muhurtham`** (video, replaces the hero still) and **`diya-loop`**
-(a real flame in the countdown band) — both via `scripts/prepare-media.sh`.
+Still unused, and the site is complete without it: **`diya-loop`** — a real
+flame in the countdown band, via `scripts/prepare-media.sh`.
+
+## The hero film
+
+Slow motion is applied in the browser, not baked into the file: `HeroFilm`
+sets `playbackRate` (and `defaultPlaybackRate`, so it survives looping). The
+clip is 5s and plays at **0.5x**, so a 10s loop. To change the speed, edit the
+`rate` prop on `<HeroFilm>` in `src/main.jsx` — no re-encoding needed.
+
+Two things baked into the CSS for this particular clip:
+
+- The source has a **generator watermark in its top-right corner**.
+  `.hero-film-video` is bottom-aligned and scaled 1.06 to push it out of
+  frame, with a separate `object-position` under 800px where `cover` crops
+  horizontally instead. If you swap in a clean clip, both can go.
+- The loop has a visible cut, because image-to-video models do not produce
+  matching first and last frames. `scripts/prepare-media.sh --loop` builds a
+  seamless palindrome, but it needs `ffmpeg` (`brew install ffmpeg`), which is
+  not installed here. Worth doing if the seam bothers you.
 
 ## Swapping the music
 

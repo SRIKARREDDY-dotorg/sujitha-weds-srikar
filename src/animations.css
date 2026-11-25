@@ -666,13 +666,16 @@ body.tera-locked { overflow: hidden; }
   background: radial-gradient(ellipse at 20% 50%, rgba(255, 252, 250, .72), transparent 72%);
 }
 @media (max-width: 800px) {
-  /* single column, so the art is directly behind the text: give it a card */
+  /* Single column, so the art is directly behind the text: give it a card.
+     Leaning on backdrop blur rather than opacity keeps the text crisp while
+     still letting the motion read through — at 0.93 alpha the hero video was
+     almost entirely hidden on a phone. */
   .hero.film-on .hero-copy {
-    background: linear-gradient(180deg, rgba(255, 252, 250, .93), rgba(255, 252, 250, .88) 72%, rgba(255, 252, 250, .66));
-    backdrop-filter: blur(2px);
+    background: linear-gradient(180deg, rgba(255, 252, 250, .82), rgba(255, 252, 250, .76) 72%, rgba(255, 252, 250, .5));
+    backdrop-filter: blur(7px) saturate(1.06);
     padding: 26px 22px 30px;
     border-radius: 3px;
-    box-shadow: 0 14px 44px rgba(120, 80, 92, .14);
+    box-shadow: 0 14px 44px rgba(120, 80, 92, .16);
   }
 }
 .bride { animation: sway-b 7s ease-in-out infinite 1.6s; transform-origin: bottom center; }
@@ -877,6 +880,21 @@ body.tera-locked { overflow: hidden; }
   height: 100%;
   object-fit: cover;
   object-position: center 32%;
+}
+/* The source clip carries a generator watermark in its top-right corner.
+   Bottom-aligning the crop pushes it out of frame on wide viewports, and the
+   small scale covers the narrow ones where `cover` crops horizontally instead
+   and so would not otherwise clip the top. */
+.hero-film-video {
+  object-position: center bottom;
+  transform: scale(1.06);
+  transform-origin: center bottom;
+}
+/* On a phone `cover` keeps only a narrow centre strip of a 16:9 clip, which
+   here is the washed-out bright middle. Favouring the right of frame shows
+   the garlands and pillar instead — and still crops the watermark. */
+@media (max-width: 800px) {
+  .hero-film-video { object-position: 72% bottom; }
 }
 .hero-film-video { opacity: 0; transition: opacity 1.5s ease; }
 .hero-film-video.playing { opacity: 1; }

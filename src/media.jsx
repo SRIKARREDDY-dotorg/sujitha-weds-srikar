@@ -183,7 +183,7 @@ export function CinemaImage({
    HeroFilm — full-bleed looping video behind the hero, poster-first.
    Falls back to the CSS couple illustration when no file exists.
    ========================================================================== */
-export function HeroFilm({ children, className = '', onMedia }) {
+export function HeroFilm({ children, className = '', onMedia, rate = 0.5 }) {
   const cfg = SLOTS.heroFilm
   const reduced = useReducedMotion()
   const { src, state } = useFirstAvailable(cfg.file, 'video', !reduced)
@@ -204,11 +204,27 @@ export function HeroFilm({ children, className = '', onMedia }) {
   useEffect(() => {
     const v = vid.current
     if (!v || !src) return
+
+    // Slow motion without re-encoding. defaultPlaybackRate makes it survive
+    // loops and seeks; applyRate re-asserts it because some browsers reset
+    // playbackRate (but not defaultPlaybackRate) on a source/metadata change.
+    const applyRate = () => {
+      v.defaultPlaybackRate = rate
+      if (v.playbackRate !== rate) v.playbackRate = rate
+    }
+    applyRate()
+    v.addEventListener('loadedmetadata', applyRate)
+    v.addEventListener('play', applyRate)
+
     const onVis = () => { document.hidden ? v.pause() : v.play().catch(() => {}) }
-    v.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+    v.play().then(() => { applyRate(); setPlaying(true) }).catch(() => setPlaying(false))
     document.addEventListener('visibilitychange', onVis)
-    return () => document.removeEventListener('visibilitychange', onVis)
-  }, [src])
+    return () => {
+      v.removeEventListener('loadedmetadata', applyRate)
+      v.removeEventListener('play', applyRate)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [src, rate])
 
   const hasFilm = state === 'found' && !reduced
   const hasPoster = poster.state === 'found'
