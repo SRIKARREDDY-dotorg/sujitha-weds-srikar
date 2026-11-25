@@ -19,7 +19,6 @@ sections with no art hide themselves entirely rather than show placeholders.
 | `countdown-band` | ~2.6:1 | Texture behind the countdown, under a maroon scrim |
 | `rsvp-band` | 16:9 | Texture behind the RSVP (oonjal swing), bottom-aligned |
 | `tradition-1` … `tradition-4` | 1:1 | Round icon row in The Rituals |
-| `nurella-thodu.mp3` | — | Background music; starts when the tera opens |
 
 The tradition icons are labelled for what they depict —
 కలశం (kalash) · తలంబ్రాలు (rice & pearls) · పసుపు (turmeric) ·
@@ -44,8 +43,15 @@ white, which on the dark countdown section makes contrast worse, not better.
 ## Optional extras
 
 Still unused, and the site is complete without them:
-`hero-muhurtham` (video, replaces the hero still) and `diya-loop`
-(a real flame in the countdown band) — both via `scripts/prepare-media.sh`.
+
+- **`nurella-thodu.mp3`** — background music. Drop any `.mp3`, `.m4a` or
+  `.ogg` at `public/media/nurella-thodu.<ext>` and the SOUND toggle appears in
+  the header on its own, starting when the tera opens and fading in. With no
+  file present the button is hidden entirely, so nothing looks broken.
+  To use a different name, change `AUDIO.file` in `src/media.jsx`.
+  Keep it under ~4 MB; it is fetched only once the visitor opts in.
+- **`hero-muhurtham`** (video, replaces the hero still) and **`diya-loop`**
+  (a real flame in the countdown band) — both via `scripts/prepare-media.sh`.
 
 ## Adding one
 

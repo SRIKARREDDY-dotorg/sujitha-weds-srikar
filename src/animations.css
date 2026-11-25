@@ -729,6 +729,12 @@ body.tera-locked { overflow: hidden; }
   transition: right .35s cubic-bezier(.2, .8, .2, 1);
 }
 .nav-links button:hover::after { right: 0; }
+/* The header is space-between, so the nav swings to the right edge whenever
+   the sound toggle is absent (no music file yet). Auto margins split the free
+   space evenly instead, keeping it centred either way. */
+@media (min-width: 601px) {
+  .nav-links { margin-inline: auto; }
+}
 .sound-button { transition: border-color .3s, color .3s; }
 .sound-button.on { border-color: var(--marigold); color: #9a5f33; }
 .sound-button.on svg { animation: note-bounce 1.1s ease-in-out infinite; }
