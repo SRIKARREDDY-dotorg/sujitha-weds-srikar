@@ -36,8 +36,11 @@ export const SLOTS = {
   tradition4:    { file: 'tradition-4',      kind: 'image', ratio: '1/1' },
 }
 
-/** Background music. Optional, like everything else here. */
-export const AUDIO = { file: 'nurella-thodu', exts: ['mp3', 'm4a', 'ogg'] }
+/** Background music. Optional, like everything else here.
+ *  m4a first: the served file is a 96kbps AAC re-encode of the 320kbps
+ *  source, which is a third of the bytes for background audio nobody is
+ *  listening to critically. The master mp3 lives in assets-src/. */
+export const AUDIO = { file: 'kalyanam-vybhogam', exts: ['m4a', 'mp3', 'ogg'] }
 
 /* Extension candidates, best format first. */
 const IMG_EXT = ['avif', 'webp', 'jpg', 'png']
